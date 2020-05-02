@@ -1,0 +1,14 @@
+{
+    "name": "atom",
+    "type": "mysql",
+    "host": "34.85.78.141",
+    "port": 3306,
+    "username": "root",
+    "password": "chfldzm2",
+    "database": "symbol",
+    "synchronize": true,
+    "logging": false,
+    "entities": ["src/database/entity/*.ts"],
+    "subscribers": ["src/database/subscriber/*.ts"],
+    "migrations": ["src/database/migration/*.ts"]
+}
