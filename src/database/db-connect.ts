@@ -1,16 +1,17 @@
 import "reflect-metadata";
 import {createConnection} from "typeorm";
+import { User } from '../models/entity/User';
 
 createConnection({
     type: "mysql",
-    host: "34.85.78.141",
-    port: 3306,
-    username: "root",
-    password: "chfldzm2",
-    database: "symbol",
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     synchronize: true,
-    logging: false
+    logging: false,
+    entities: [ User ]
 }).then(connection => {
-    // here you can start to work with your entities
     console.log('DB connected!');
 }).catch(error => console.log(error));

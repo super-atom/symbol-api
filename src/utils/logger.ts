@@ -1,7 +1,14 @@
-import * as pino from "pino";
-import { APP_ID, LOG_LEVEL } from "../config/config";
+import { Request, Response } from "express";
+import * as winston from 'winston';
 
-export const logger = pino({
-    name: 'app-name',
-    level: 'debug'
+export const logger = winston.createLogger({
+    transports: [
+        new winston.transports.Console()
+    ],
+    format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.json(),
+    )
 });
+
+export default logger;

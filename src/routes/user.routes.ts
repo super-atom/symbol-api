@@ -1,10 +1,11 @@
-import {
-    Request, Response, NextFunction
-} from 'express';
-import router from "./routes";
+import { Router } from 'express';
+import { logger, logHandler } from '../utils/logger';
 
-router.get('/user', (req: Request, res: Response, next: NextFunction) => {
-    console.log('get /user');
-});
+import * as userController from '../controllers/user.controller';
 
-export default userRoutes;
+const router = Router();
+
+router.get('/', userController.getUsers);
+router.post('/', userController.postUser);
+
+export default router;

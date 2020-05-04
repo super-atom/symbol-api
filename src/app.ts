@@ -1,11 +1,15 @@
+import * as dotenv from 'dotenv';
 import * as express from "express";
 import * as bodyParser from "body-parser";
 import * as cors from "cors";
-import * as pino from "express-pino-logger";
 import * as helmet from "helmet";
-import './database/db-connect';
+import * as cookieParser from "cookie-parser";
+import * as winston from 'winston';
+import * as expressWinston from 'express-winston';
+import * as Sentry from '@sentry/node';
+import routes from './routes';
 
-// import userRoutes from "./routes/user.routes";
+dotenv.config();
 
 class App {
     public app: express.Application;
@@ -16,13 +20,25 @@ class App {
     }
 
     private config(): void {
+        this.app.use(Sentry.Handlers.requestHandler());
         this.app.use(cors());
         this.app.use(helmet());
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: false }));
-        this.app.use(pino);
+        this.app.use(cookieParser());
+        this.app.use(expressWinston.logger({
+            transports: [
+                new winston.transports.Console()
+            ],
+            format: winston.format.combine(
+                winston.format.colorize(),
+                winston.format.json(),
+            ),
+            colorize: true
+        }));
 
-        // this.app.use("/user", userRoutes);
+        this.app.use("/", routes);
+        this.app.use(Sentry.Handlers.errorHandler());
     }
 }
 
