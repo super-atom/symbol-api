@@ -4,10 +4,10 @@ import * as bodyParser from "body-parser";
 import * as cors from "cors";
 import * as helmet from "helmet";
 import * as cookieParser from "cookie-parser";
-import * as winston from 'winston';
-import * as expressWinston from 'express-winston';
+import { logger } from "./middlewares/logger";
 import * as Sentry from '@sentry/node';
 import routes from './routes';
+import errorMiddleware from "./middlewares/errorHandler";
 
 dotenv.config();
 
@@ -26,16 +26,7 @@ class App {
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: false }));
         this.app.use(cookieParser());
-        this.app.use(expressWinston.logger({
-            transports: [
-                new winston.transports.Console()
-            ],
-            format: winston.format.combine(
-                winston.format.colorize(),
-                winston.format.json(),
-            ),
-            colorize: true
-        }));
+        this.app.use(logger('info'));
 
         this.app.use("/", routes);
         this.app.use(Sentry.Handlers.errorHandler());
