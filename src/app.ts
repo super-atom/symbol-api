@@ -7,7 +7,8 @@ import * as cookieParser from "cookie-parser";
 import { logger } from "./middlewares/logger";
 import * as Sentry from '@sentry/node';
 import routes from './routes';
-import errorMiddleware from "./middlewares/errorHandler";
+import { handleError, ErrorHandler } from './utils/errorHandler';
+import { NextFunction } from 'express';
 
 dotenv.config();
 
@@ -27,8 +28,10 @@ class App {
         this.app.use(bodyParser.urlencoded({ extended: false }));
         this.app.use(cookieParser());
         this.app.use(logger('info'));
-
         this.app.use("/", routes);
+        this.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
+            handleError(err, res);
+        });
         this.app.use(Sentry.Handlers.errorHandler());
     }
 }
