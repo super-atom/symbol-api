@@ -1,13 +1,26 @@
 import app from './app';
-import {
-    Request, Response, NextFunction
-} from "express";
+import './database/dbConnect';
+import * as Sentry from '@sentry/node';
+import { RewriteFrames } from '@sentry/integrations';
+import { InitModelData } from './models/data/index';
 
-// import { PORT } from "./config/config";
+// declare global {
+//     namespace NodeJS {
+//         interface Global {
+//             __rootdir__: string;
+//         }
+//     }
+// }
 
-app.get('/', (req: Request, res: Response, next: NextFunction) => {
-    console.log('hello');
+// Sentry.init({
+//     dsn: process.env.SENTRY_DNS,
+//     integrations: [new RewriteFrames({
+//         root: global.__rootdir__
+//     })]
+// });
+
+// global.__rootdir__ = __dirname || process.cwd();
+
+app.listen(process.env.SERVER_PORT, () => {
+    console.log(`Server running... Port ${process.env.SERVER_PORT} Mode ${process.env.NODE_ENV}`);
 });
-
-const PORT = 3000;
-app.listen(PORT, () => console.log(`Server running : Port ${PORT}`));

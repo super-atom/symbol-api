@@ -1,0 +1,6 @@
+[user]
+    name = Lee Juseok
+    email = super0atom@gmail.com
+
+[commit]
+  template = ~/.gitmessage
