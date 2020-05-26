@@ -1,51 +1,57 @@
-import { Entity, Column, PrimaryColumn, OneToMany } from "typeorm";
-import { RelationLoader } from "typeorm/query-builder/RelationLoader";
-import { RelationIdLoader } from "typeorm/query-builder/RelationIdLoader";
-import { IsNotEmpty, Min, Max } from "class-validator";
-import { Profile } from './Profile';
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+import { IsNotEmpty, IsBoolean, IsNumber, IsDate, IsString } from "class-validator";
 
 @Entity()
 export class Human {
-    @Column()
-    gender: string
+    @PrimaryGeneratedColumn("uuid")
+    @IsNotEmpty()
+    @IsString()
+    human_id: string;
 
-    @Column()
+    @Column('tinyint', { width: 1 })
+    @IsNumber()
+    gender: number
+
+    @Column('date')
+    @IsDate()
     birthday: Date
 
-    @Column()
+    @Column('varchar', { length: 50 })
+    @IsString()
     real_name: string
 
-    @Column()
+    @Column('varchar', { length: 50 })
+    @IsString()
     birth_country: string
 
-    @Column()
+    @Column('varchar', { length: 50 })
+    @IsString()
     birth_city: string
 
-    @Column()
+    @Column('varchar', { length: 50 })
+    @IsString()
     activity_country: string
 
-    @Column()
+    @Column('varchar', { length: 50 })
+    @IsString()
     current_live_city: string
 
-    @Column()
+    @Column('smallint', { unsigned: true })
     @IsNotEmpty()
+    @IsNumber()
     popularity: number
 
-    @Column()
+    @Column('smallint', { unsigned: true })
     @IsNotEmpty()
+    @IsNumber()
     influence: number
 
-    @Column()
+    @Column('smallint')
     @IsNotEmpty()
     reputation: number
 
-    @Column()
+    @Column('boolean', { default: false })
     @IsNotEmpty()
+    @IsBoolean()
     isDead: boolean
-
-    @Column()
-
-    @PrimaryColumn()
-    @OneToMany(() => Profile, profile => profile.human)
-    profiles: Profile[];
 }

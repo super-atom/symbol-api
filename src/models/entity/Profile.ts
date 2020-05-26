@@ -1,34 +1,33 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, OneToOne, JoinColumn } from "typeorm";
-import { RelationLoader } from "typeorm/query-builder/RelationLoader";
-import { RelationIdLoader } from "typeorm/query-builder/RelationIdLoader";
-import { validate, validateOrReject, Contains, IsInt, Length, IsEmail, IsFQDN, IsDate, IsNotEmpty, Min, Max } from "class-validator";
-import * as bcrypt from 'bcrypt';
-import { Human } from "./Human";
+import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from "typeorm";
+import { IsNotEmpty, IsString } from "class-validator";
 import { ProfileType } from "./ProfileType";
+import { PublicationData } from './PublicationData';
 
 @Entity()
 export class Profile {
     @PrimaryGeneratedColumn("uuid")
     @IsNotEmpty()
+    @IsString()
     profile_id: string;
 
+    @Column('varchar', { length: 50 })
     @IsNotEmpty()
-    profile_type: number;
-
-    @Column()
+    @IsString()
     activity_name: string;
 
-    @Column()
+    @Column('varchar', { length: 50 })
+    @IsString()
     native_activity_name: string;
 
-    @Column()
+    @Column('varchar', { length: 500 })
+    @IsString()
     profile_description: string;
 
-    @OneToOne(() => ProfileType)
+    @OneToOne(type => ProfileType)
     @JoinColumn()
     user_type: ProfileType;
 
-    @ManyToOne(() => Human, human => human.profiles)
+    @OneToOne(type => PublicationData)
     @JoinColumn()
-    human: Human;
+    publication_id: PublicationData;
 }
