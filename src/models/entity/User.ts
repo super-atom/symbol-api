@@ -1,7 +1,5 @@
-import { Entity, Column, PrimaryColumn, PrimaryGeneratedColumn, Index, OneToOne, JoinColumn } from "typeorm";
-import { RelationLoader } from "typeorm/query-builder/RelationLoader";
-import { RelationIdLoader } from "typeorm/query-builder/RelationIdLoader";
-import { validate, validateOrReject, Contains, IsInt, Length, IsEmail, IsFQDN, IsDate, IsNotEmpty, IsString, Min, Max } from "class-validator";
+import { Entity, Column, PrimaryGeneratedColumn, Index, OneToOne, JoinColumn } from "typeorm";
+import { IsInt, IsEmail, IsDate, IsNotEmpty, IsString } from "class-validator";
 import { UserType } from './UserType';
 
 @Entity()
@@ -29,7 +27,7 @@ export class User {
     @IsString()
     user_password: string;
 
-    @Column('mediumint', { width: 9, nullable: true, default: 0 })
+    @Column('int', { default: 0 })
     @IsNotEmpty()
     @IsInt()
     user_contribute_point: number;

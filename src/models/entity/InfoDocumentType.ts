@@ -1,15 +1,14 @@
 import { Entity, Column, PrimaryColumn } from "typeorm";
-import { IsNotEmpty, IsString, IsNumber } from "class-validator";
+import { IsNotEmpty, IsString } from "class-validator";
 
 @Entity()
-export class UserType {
+export class InfoDocumentType {
     @PrimaryColumn('tinyint', { width: 1 })
     @IsNotEmpty()
-    @IsNumber()
-    user_type: number;
+    info_document_type: number;
 
     @Column('varchar', { length: 50 })
-    @IsNotEmpty()
     @IsString()
-    user_type_name: string;
+    @IsNotEmpty()
+    info_document_type_name: string;
 }

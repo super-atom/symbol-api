@@ -1,7 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { getRepository } from "typeorm";
 import { format } from 'date-fns';
 import * as bcrypt from 'bcrypt';
+import { validate } from 'class-validator';
 import { User } from "../models/entity/User";
 import { catchAsync } from '../utils/catchAsync';
 import * as util from '../utils/index';
