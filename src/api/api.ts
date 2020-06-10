@@ -1,7 +1,7 @@
 {
 	"info": {
 		"_postman_id": "b1ad5d8d-639e-4df0-b75a-fd0c8515bdc2",
-		"name": "symbol",
+		"name": "symbol api",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
