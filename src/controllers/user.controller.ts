@@ -1,58 +1,70 @@
 import { Request, Response } from 'express';
-import { getRepository } from "typeorm";
-import { format } from 'date-fns';
+import * as sequelize from 'sequelize';
 import * as bcrypt from 'bcrypt';
-import { validate } from 'class-validator';
-import { User } from "../models/entity/User";
+import { v4 as uuidv4 } from 'uuid';
 import { catchAsync } from '../utils/catchAsync';
 import * as util from '../utils/index';
+import { User } from '../models/entity/User';
+import { Profile } from '../models/entity/Profile';
+import { Human } from '../models/entity/Human';
 
-export const postUser = catchAsync(async (req: Request, res: Response) => {
-    await getRepository(User)
-        .createQueryBuilder()
-        .insert()
-        .into(User)
-        .values({
-            user_login_id: req.body.user_login_id,
-            user_email: req.body.user_email,
-            user_password: bcrypt.hashSync(req.body.user_password, 10),
-            user_contribute_point: 0,
-            user_signup_date: format(Date.now(), 'yyyy-MM-dd HH:mm:ss')
-        })
-        .execute();
-    util.controllerResult({
-        "user_login_id": req.body.user_login_id,
-        "user_email": req.body.user_email
-    }, res);
+export const createUser = catchAsync(async (req: Request, res: Response) => {
+    const human_uuid = uuidv4();
+    const user_uuid = uuidv4();
+    const { user_login_id, user_email, user_password, gender, age, birthday, real_name, birth_country, birth_city, activity_country, current_live_city } = req.body;
+
+    Human.create({
+        human_id: human_uuid,
+        gender: gender,
+        age: age,
+        birthday: birthday,
+        real_name: real_name,
+        birth_county: birth_country,
+        birth_city: birth_city,
+        activity_country: activity_country,
+        current_live_city: current_live_city,
+    }).then(() => User.create({
+        user_id: user_uuid,
+        user_login_id: user_login_id,
+        user_email: user_email,
+        user_password: bcrypt.hashSync(user_password, 10),
+        human_id: human_uuid
+    })).then(() => {
+        util.controllerResult(res, 200, {
+            user_login_id: user_login_id,
+            user_email: user_email,
+            age: age,
+            birthday: birthday,
+            real_name: real_name,
+            birth_county: birth_country,
+            birth_city: birth_city,
+            activity_country: activity_country,
+            current_live_city: current_live_city
+        });
+    });
 });
 
 export const getUser = catchAsync(async (req: Request, res: Response) => {
-    const result = await getRepository(User)
-        .createQueryBuilder("user")
-        .where("user.user_login_id = :id", { id: req.params.id })
-        .getOne();
-    util.controllerResult(result, res);
+    User.findByPk(req.params.id).then(data => {
+        util.controllerResult(res, 200, data);
+    })
 });
 
 export const getUsers = catchAsync(async (req: Request, res: Response) => {
-    const data = await getRepository(User).find();
-    const result: Array<object> = [];
-    data.forEach(el => {
-        result.push({
-            "user_login_id": el.user_login_id,
-            "user_email": el.user_email,
-            "user_type": el.user_type
-        })
+    User.findAll().then(data => {
+        util.controllerResult(res, 200, data);
     });
-    util.controllerResult(result, res);
 });
 
-export const patchUser = catchAsync(async (req: Request, res: Response) => {
-    const result = await getRepository(User)
-        .createQueryBuilder()
-        .update(User)
-        .set({ user_password: bcrypt.hashSync(req.body.user_password, 10) })
-        .where("user.user_login_id = :id", { id: req.params.id })
-        .execute();
-    util.controllerResult(result, res);
+export const updateUser = catchAsync(async (req: Request, res: Response) => {
+    util.controllerResult(res, 200);
+});
+
+export const deleteUser = catchAsync(async (req: Request, res: Response) => {
+    User.findByPk(req.params.id)
+        .then(() => User.destroy({
+            where: { user_id: req.params.id }
+        }));
+
+    util.controllerResult(res);
 });

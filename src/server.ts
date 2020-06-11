@@ -1,8 +1,8 @@
 import app from './app';
 import './database/dbConnect';
+import * as dotenv from 'dotenv';
 import * as Sentry from '@sentry/node';
 import { RewriteFrames } from '@sentry/integrations';
-import { InitModelData } from './models/data/index';
 
 // declare global {
 //     namespace NodeJS {
@@ -21,6 +21,7 @@ import { InitModelData } from './models/data/index';
 
 // global.__rootdir__ = __dirname || process.cwd();
 
+dotenv.config();
 app.listen(process.env.SERVER_PORT, () => {
     console.log(`Server running... Port ${process.env.SERVER_PORT} Mode ${process.env.NODE_ENV}`);
 });

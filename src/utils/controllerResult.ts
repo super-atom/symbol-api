@@ -1,9 +1,10 @@
-import { ErrorHandler } from './errorHandler';
+export function controllerResult(res, statusCode?: number, data?: any, message?: string) {
+    if (statusCode === 200) message = 'success';
 
-export function controllerResult(data: any, res) {
-    if (!data) throw new ErrorHandler(404, 'Error');
-    res.json({
-        status: 'success',
-        data: data
-    });
+    if (res) {
+        res.json({
+            status: message,
+            data: data
+        });
+    }
 }

@@ -1,33 +1,43 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from "typeorm";
-import { IsNotEmpty, IsString } from "class-validator";
-import { ProfileType } from "./ProfileType";
-import { PublicationData } from './PublicationData';
+import { DataTypes } from 'sequelize';
+import { connection } from '../../database/dbConnect';
 
-@Entity()
-export class Profile {
-    @PrimaryGeneratedColumn("uuid")
-    @IsNotEmpty()
-    @IsString()
-    profile_id: string;
-
-    @Column('varchar', { length: 50 })
-    @IsNotEmpty()
-    @IsString()
-    activity_name: string;
-
-    @Column('varchar', { length: 50 })
-    @IsString()
-    native_activity_name: string;
-
-    @Column('varchar', { length: 500 })
-    @IsString()
-    profile_description: string;
-
-    @OneToOne(type => ProfileType)
-    @JoinColumn()
-    user_type: ProfileType;
-
-    @OneToOne(type => PublicationData)
-    @JoinColumn()
-    publication_id: PublicationData;
-}
+export const Profile = connection.define('profile', {
+    profileId: {
+        type: DataTypes.STRING(255),
+        allowNull: false,
+        primaryKey: true,
+        field: 'profile_id'
+    },
+    activityName: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        field: 'activity_name'
+    },
+    nativeActivityName: {
+        type: DataTypes.STRING(50),
+        allowNull: false,
+        field: 'native_activity_name'
+    },
+    profileDescription: {
+        type: DataTypes.STRING(500),
+        allowNull: false,
+        field: 'profile_description'
+    },
+    profile_type: {
+        type: DataTypes.INTEGER(1),
+        allowNull: false,
+        field: 'profile_type'
+    },
+    publicationIdPublicationId: {
+        type: DataTypes.STRING(36),
+        allowNull: true,
+        references: {
+            model: 'publication_data',
+            key: 'publication_id'
+        },
+        unique: true,
+        field: 'publicationIdPublicationId'
+    }
+}, {
+    tableName: 'profile'
+});

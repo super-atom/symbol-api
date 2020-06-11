@@ -21,3 +21,6 @@ dist/
 .idea/
 *.swp
 .awcache
+
+dbConfig.ts
+src/database/config.json
