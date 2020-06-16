@@ -1,38 +1,38 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from "typeorm";
-import { IsDate, IsNotEmpty, IsString, IsBoolean } from "class-validator";
-import { User } from './User';
+import * as Sequelize from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
+import { connection } from '../../database/dbConnect';
 
-@Entity()
-export class HistoricalData {
-    @PrimaryGeneratedColumn("uuid")
-    @IsNotEmpty()
-    @IsString()
-    historical_data_id: string;
-
-    @Column('mediumint', { nullable: true })
-    @IsNotEmpty()
-    ip: number;
-
-    @Column('tinyint', { width: 1 })
-    @IsNotEmpty()
-    action_type: number;
-
-    @Column('datetime', { nullable: true })
-    @IsNotEmpty()
-    @IsDate()
-    action_occurred_datetime: Date;
-
-    @Column('boolean', { default: false, nullable: true })
-    @IsNotEmpty()
-    @IsBoolean()
-    is_hide: boolean;
-
-    @Column('boolean', { default: false, nullable: true })
-    @IsNotEmpty()
-    @IsBoolean()
-    is_delete: boolean;
-
-    @ManyToOne(() => User, user => user.user_id)
-    @JoinColumn()
-    user: User;
+export class HistoricalData extends Model {
 }
+
+HistoricalData.init({
+    historical_data: {
+        type: DataTypes.UUID,
+        primaryKey: true,
+        allowNull: false,
+        defaultValue: Sequelize.UUIDV4,
+        field: 'publication_id'
+    },
+    is: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: 'is_temp_data'
+    },
+    action_type: {
+        type: DataTypes.INTEGER(1),
+        allowNull: false,
+        defaultValue: 1,
+        field: 'action_type'
+    },
+    action_occurred_datetime: {
+        type: DataTypes.DATE,
+        allowNull: false,
+        defaultValue: new Date(),
+        field: 'action_type'
+    }
+}, {
+    sequelize: connection,
+    modelName: 'publication',
+    freezeTableName: true
+});

@@ -6,16 +6,16 @@ import { catchAsync } from '../utils/catchAsync';
 import * as util from '../utils/index';
 import { User } from '../models/entity/User';
 import { Profile } from '../models/entity/Profile';
-import { Human } from '../models/entity/Human';
 import { InfoDocument } from '../models/entity/InfoDocument';
 import { Publication } from '../models/entity/Publication';
+import { Human } from '../models/entity/Human';
 import { ProfileTypeRule } from '../rules/type.rule';
 
-export const createUser = catchAsync(async (req: Request, res: Response) => {
-    const { user_login_id, user_email, user_password, gender, age, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, profile_type } = req.body;
-    const profile_id = uuidv4();
+export const createProfile = catchAsync(async (req: Request, res: Response) => {
+    const { user_id, gender, age, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city } = req.body;
+    req.body.user_id = req.user.id;
     const human_id = uuidv4();
-    const user_id = uuidv4();
+    const profile_id = uuidv4();
     const publication_id = uuidv4();
 
     Human.create({
@@ -30,14 +30,6 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
         current_live_city,
     });
 
-    User.create({
-        user_id,
-        human_id,
-        user_login_id,
-        user_email,
-        user_password: bcrypt.hashSync(user_password, 10),
-    });
-
     Publication.create({
         publication_id,
         user_id
@@ -48,7 +40,7 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
         human_id,
         publication_id,
         profile_type: ProfileTypeRule.User,
-        activity_name: user_login_id
+        activity_name
     });
 
     InfoDocument.create({
@@ -56,8 +48,7 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
     });
 
     util.controllerResult(res, 200, {
-        user_login_id,
-        user_email,
+        activity_name,
         age,
         birthday,
         real_name,
@@ -68,41 +59,39 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-export const getUser = catchAsync(async (req: Request, res: Response) => {
-    User.findByPk(req.params.id).then(data => {
-        util.controllerResult(res, 200, data);
-    })
-});
-
-export const getUsers = catchAsync(async (req: Request, res: Response) => {
-    User.findAll().then(data => {
+export const getProfiles = catchAsync(async (req: Request, res: Response) => {
+    Profile.findAll().then(data => {
         util.controllerResult(res, 200, data);
     });
 });
 
-export const updateUser = catchAsync(async (req: Request, res: Response) => {
-    const { user_type, user_email, user_password } = req.body;
+export const getProfile = catchAsync(async (req: Request, res: Response) => {
+    Profile.findByPk(req.params.id).then(data => {
+        util.controllerResult(res, 200, data);
+    })
+});
+
+export const updateProfile = catchAsync(async (req: Request, res: Response) => {
+    const { profile_type } = req.body;
     const { id } = req.params;
 
-    User.findByPk(id)
-        .then(() => User.update(
+    Profile.findByPk(id)
+        .then(() => Profile.update(
             {
-                user_type,
-                user_email,
-                user_password: bcrypt.hashSync(user_password, 10)
+                profile_type,
             },
             {
-                where: { user_id: id }
+                where: { profile_id: id }
             }));
     util.controllerResult(res, 200);
 });
 
-export const deleteUser = catchAsync(async (req: Request, res: Response) => {
+export const deleteProfile = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
 
-    User.findByPk(id)
+    Profile.findByPk(id)
         .then(() => User.destroy({
-            where: { user_id: id }
+            where: { profile_id: id }
         }));
 
     util.controllerResult(res);

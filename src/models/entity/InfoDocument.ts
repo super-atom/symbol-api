@@ -1,25 +1,25 @@
-import { Entity, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm';
-import { IsNotEmpty, IsString } from "class-validator";
+import * as Sequelize from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
+import { connection } from '../../database/dbConnect';
 import { Profile } from './Profile';
-import { User } from './User';
-import { InfoDocumentType } from './InfoDocumentType';
 
-@Entity()
-export class InfoDocument {
-    @PrimaryGeneratedColumn("uuid")
-    @IsNotEmpty()
-    @IsString()
-    info_doc_id: string;
-
-    @OneToOne(() => User, user => user.user_id)
-    @JoinColumn()
-    user_id: User;
-
-    @OneToOne(() => Profile, profile => profile.profile_id)
-    @JoinColumn()
-    profile_id: Profile;
-
-    @OneToOne(() => InfoDocumentType)
-    @JoinColumn()
-    info_document_type: InfoDocumentType;
+export class InfoDocument extends Model {
 }
+
+InfoDocument.init({
+    info_document_id: {
+        type: DataTypes.UUID,
+        primaryKey: true,
+        allowNull: false,
+        defaultValue: Sequelize.UUIDV4,
+        field: 'info_document_id'
+    }
+}, {
+    sequelize: connection,
+    modelName: 'info_document',
+    freezeTableName: true
+});
+
+InfoDocument.belongsTo(Profile, {
+    foreignKey: 'profile_id',
+});

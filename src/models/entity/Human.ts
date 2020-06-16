@@ -1,57 +1,58 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
-import { IsNotEmpty, IsBoolean, IsNumber, IsDate, IsString } from "class-validator";
+import * as Sequelize from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
+import { connection } from '../../database/dbConnect';
+import { Profile } from './Profile';
 
-@Entity()
-export class Human {
-    @PrimaryGeneratedColumn("uuid")
-    @IsNotEmpty()
-    @IsString()
-    human_id: string;
+export class Human extends Model { }
 
-    @Column('tinyint', { width: 1 })
-    @IsNumber()
-    gender: number
-
-    @Column('date')
-    @IsDate()
-    birthday: Date
-
-    @Column('varchar', { length: 50 })
-    @IsString()
-    real_name: string
-
-    @Column('varchar', { length: 50 })
-    @IsString()
-    birth_country: string
-
-    @Column('varchar', { length: 50 })
-    @IsString()
-    birth_city: string
-
-    @Column('varchar', { length: 50 })
-    @IsString()
-    activity_country: string
-
-    @Column('varchar', { length: 50 })
-    @IsString()
-    current_live_city: string
-
-    @Column('smallint', { unsigned: true })
-    @IsNotEmpty()
-    @IsNumber()
-    popularity: number
-
-    @Column('smallint', { unsigned: true })
-    @IsNotEmpty()
-    @IsNumber()
-    influence: number
-
-    @Column('smallint')
-    @IsNotEmpty()
-    reputation: number
-
-    @Column('boolean', { default: false })
-    @IsNotEmpty()
-    @IsBoolean()
-    isDead: boolean
-}
+Human.init({
+    human_id: {
+        type: DataTypes.UUID,
+        primaryKey: true,
+        allowNull: false,
+        defaultValue: Sequelize.UUIDV4,
+        field: 'human_id'
+    },
+    gender: {
+        type: DataTypes.INTEGER(1),
+        field: 'gender'
+    },
+    age: {
+        type: DataTypes.INTEGER(3),
+        field: 'age'
+    },
+    birthday: {
+        type: DataTypes.DATE(),
+        field: 'birthday'
+    },
+    real_name: {
+        type: DataTypes.STRING(50),
+        field: 'real_name'
+    },
+    birth_country: {
+        type: DataTypes.STRING(50),
+        field: 'birth_country'
+    },
+    birth_city: {
+        type: DataTypes.STRING(100),
+        field: 'birth_city'
+    },
+    activity_country: {
+        type: DataTypes.STRING(100),
+        field: 'activity_country'
+    },
+    current_live_city: {
+        type: DataTypes.STRING(100),
+        field: 'current_live_city'
+    },
+    is_dead: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: 'is_dead'
+    }
+}, {
+    sequelize: connection,
+    modelName: 'human',
+    freezeTableName: true
+})
