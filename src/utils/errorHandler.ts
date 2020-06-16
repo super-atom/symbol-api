@@ -1,5 +1,5 @@
 export class ErrorHandler extends Error {
-    constructor(statusCode: number, message: string, stack: string) {
+    constructor(statusCode: number, message: string, stack?: string) {
         super();
         this.statusCode = statusCode;
         this.message = message;
@@ -15,5 +15,4 @@ export const handleError = (err, res) => {
         message,
         stack
     });
-    console.log(stack);
 };

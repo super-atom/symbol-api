@@ -10,6 +10,6 @@ import * as bcrypt from 'bcrypt';
 const router = Router();
 
 router
-    .post('/login', authenticationController.login)
+    .post('/login', authenticationController.loginUser)
 
 export default router;

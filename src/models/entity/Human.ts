@@ -1,6 +1,7 @@
 import * as Sequelize from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
 import { connection } from '../../database/dbConnect';
+import { Profile } from './Profile';
 
 export class Human extends Model { }
 

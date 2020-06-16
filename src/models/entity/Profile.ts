@@ -1,26 +1,32 @@
-import { DataTypes } from 'sequelize';
+import * as Sequelize from 'sequelize';
+import { DataTypes, Model } from 'sequelize';
 import { connection } from '../../database/dbConnect';
+import { Human } from './Human';
+import { Publication } from './Publication';
+import UserTypeRule from '../../rules/type.rule';
 
-export const Profile = connection.define('profile', {
-    profileId: {
-        type: DataTypes.STRING(255),
-        allowNull: false,
+export class Profile extends Model {
+}
+
+Profile.init({
+    profile_id: {
+        type: DataTypes.UUID,
         primaryKey: true,
+        allowNull: false,
+        defaultValue: Sequelize.UUIDV4,
         field: 'profile_id'
     },
-    activityName: {
+    activity_name: {
         type: DataTypes.STRING(50),
         allowNull: false,
         field: 'activity_name'
     },
-    nativeActivityName: {
+    native_activity_name: {
         type: DataTypes.STRING(50),
-        allowNull: false,
         field: 'native_activity_name'
     },
-    profileDescription: {
+    profile_description: {
         type: DataTypes.STRING(500),
-        allowNull: false,
         field: 'profile_description'
     },
     profile_type: {
@@ -28,16 +34,16 @@ export const Profile = connection.define('profile', {
         allowNull: false,
         field: 'profile_type'
     },
-    publicationIdPublicationId: {
-        type: DataTypes.STRING(36),
-        allowNull: true,
-        references: {
-            model: 'publication_data',
-            key: 'publication_id'
-        },
-        unique: true,
-        field: 'publicationIdPublicationId'
-    }
 }, {
-    tableName: 'profile'
+    sequelize: connection,
+    modelName: 'profile',
+    freezeTableName: true
+});
+
+Profile.belongsTo(Human, {
+    foreignKey: 'human_id',
+});
+
+Profile.belongsTo(Publication, {
+    foreignKey: 'publication_id',
 });

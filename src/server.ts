@@ -3,6 +3,7 @@ import './database/dbConnect';
 import * as dotenv from 'dotenv';
 import * as Sentry from '@sentry/node';
 import { RewriteFrames } from '@sentry/integrations';
+import { ProfileTypeRule } from './rules/type.rule';
 
 // declare global {
 //     namespace NodeJS {
