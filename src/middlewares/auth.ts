@@ -1,8 +1,9 @@
+import { UserTypeRule } from './../rules/type.rule';
 import * as jwt from 'jsonwebtoken';
 import { catchAsync } from '../utils/catchAsync';
 import { ErrorHandler } from '../utils/errorHandler';
 import { Response, Request, NextFunction } from 'express';
-import { User } from '../models/entity/User';
+import { User } from '../models/entities/User';
 
 export const authenticate = catchAsync(async (req: Response, res: Request, next: NextFunction) => {
     let token;
@@ -26,11 +27,10 @@ export const authenticate = catchAsync(async (req: Response, res: Request, next:
     }
 });
 
-export const authorize = (...roles): any => {
+export const authorize = (role: number) => {
     return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
-            return next(new ErrorResponse(`User role ${req.user.role} is not authorized to access this route`, 403));
-        }
+        const check = (role <= req.user.user_type);
+        if (!check) return next(new ErrorHandler(400, "권한이 없습니다!"));
         next();
     }
 };

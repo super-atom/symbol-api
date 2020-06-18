@@ -1,4 +1,4 @@
-import { User } from './../models/entity/User';
+import { User } from '../models/entities/User';
 import { Router } from 'express';
 import * as jwt from 'jsonwebtoken';
 import * as authenticationController from '../controllers/authentication.controller';

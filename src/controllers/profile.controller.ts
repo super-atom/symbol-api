@@ -3,12 +3,12 @@ import * as sequelize from 'sequelize';
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { catchAsync } from '../utils/catchAsync';
-import * as util from '../utils/index';
-import { User } from '../models/entity/User';
-import { Profile } from '../models/entity/Profile';
-import { InfoDocument } from '../models/entity/InfoDocument';
-import { Publication } from '../models/entity/Publication';
-import { Human } from '../models/entity/Human';
+import * as util from '../utils/utils.index';
+import { User } from '../models/entities/User';
+import { Profile } from '../models/entities/Profile';
+import { InfoDocument } from '../models/entities/InfoDocument';
+import { Publication } from '../models/entities/Publication';
+import { Human } from '../models/entities/Human';
 import { ProfileTypeRule } from '../rules/type.rule';
 
 export const createProfile = catchAsync(async (req: Request, res: Response) => {
@@ -72,13 +72,16 @@ export const getProfile = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const updateProfile = catchAsync(async (req: Request, res: Response) => {
-    const { profile_type } = req.body;
+    const { profile_type, profile_description, activity_name, native_activity_name } = req.body;
     const { id } = req.params;
 
     Profile.findByPk(id)
         .then(() => Profile.update(
             {
                 profile_type,
+                profile_description,
+                activity_name,
+                native_activity_name
             },
             {
                 where: { profile_id: id }

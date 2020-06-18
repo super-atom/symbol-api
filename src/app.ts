@@ -8,7 +8,7 @@ import * as session from 'express-session';
 import * as Sentry from '@sentry/node';
 import * as hpp from 'hpp';
 import * as csrf from 'csurf';
-import routes from './routes';
+import routes from './routes/routes.index';
 import { handleError, ErrorHandler } from './utils/errorHandler';
 import { logger } from "./middlewares/logger";
 import { limiter } from './middlewares/rateLimiter';

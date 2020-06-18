@@ -1,22 +1,30 @@
 import * as Sequelize from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
-import { connection } from '../../database/dbConnect';
-import { Human } from './Human';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
+import * as Joi from '@hapi/joi';
+import { connection } from '../../database/dbConnect';
+import { Human } from './Human';
 import UserTypeRule from '../../rules/type.rule';
 
 export class User extends Model {
-    static createPassword(user_password: string): any {
-        return bcrypt.hashSync(user_password, 10);
-    }
-
-    static isValidPassword(user_password: string, password: string): any {
+    static isValidPassword(user_password: string, password: string): boolean {
         return bcrypt.compareSync(user_password, password);
     }
 
-    getSignedToken(id): any {
-        return jwt.sign({ user_id: id }, "SYMBOL", { expiresIn: "1d" });
+    static getSignedToken(id: string): string {
+        return jwt.sign({ user_id: id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
+    }
+
+    static schemaValidation(data: object): object {
+        const schema = Joi.object({
+            user_type: Joi.number(),
+            user_login_id: Joi.string().required().min(3).max(10),
+            user_email: Joi.string().required().email().max(20),
+            user_password: Joi.string().required().min(3).max(10)
+        }).options({ abortEarly: false });
+
+        return schema.validate(data);
     }
 }
 
@@ -38,12 +46,16 @@ User.init({
         type: DataTypes.STRING(10),
         allowNull: false,
         unique: true,
+        validate: {
+            len: [3, 10]
+        },
         field: 'user_login_id'
     },
     user_email: {
         type: DataTypes.STRING(50),
         allowNull: false,
         unique: true,
+        validate: { isEmail: true },
         field: 'user_email'
     },
     user_password: {
@@ -56,7 +68,13 @@ User.init({
         allowNull: false,
         defaultValue: '0',
         field: 'user_contribute_point'
-    }
+    },
+    is_delete: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: 'is_delete'
+    },
 }, {
     sequelize: connection,
     modelName: 'user',

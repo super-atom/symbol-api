@@ -1,11 +1,21 @@
 import * as Sequelize from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
+import * as Joi from '@hapi/joi';
 import { connection } from '../../database/dbConnect';
 import { Human } from './Human';
 import { Publication } from './Publication';
-import UserTypeRule from '../../rules/type.rule';
 
 export class Profile extends Model {
+    static schemaValidation(data: object): object {
+        const schema = Joi.object({
+            activity_name: Joi.string().required(),
+            native_activity_name: Joi.string(),
+            profile_description: Joi.string(),
+            profile_type: Joi.number(),
+        }).options({ abortEarly: false });
+
+        return schema.validate(data);
+    }
 }
 
 Profile.init({
