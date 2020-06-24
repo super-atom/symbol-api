@@ -14,6 +14,11 @@ Publication.init({
         defaultValue: Sequelize.UUIDV4,
         field: 'publication_id'
     },
+    // publication_type: {
+    //     type: DataTypes.TINYINT(1),
+    //     allowNull: false,
+    //     field: 'publication_type'
+    // },
     perfection: {
         type: DataTypes.INTEGER(3),
         allowNull: false,
@@ -27,7 +32,7 @@ Publication.init({
         field: 'perfection_state'
     },
     view_count: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.BIGINT,
         allowNull: false,
         defaultValue: 0,
         field: 'view_count'

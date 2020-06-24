@@ -1,4 +1,3 @@
-import { UserTypeRule } from './../rules/type.rule';
 import * as jwt from 'jsonwebtoken';
 import { catchAsync } from '../utils/catchAsync';
 import { ErrorHandler } from '../utils/errorHandler';

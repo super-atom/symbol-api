@@ -1,78 +1,118 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { Op } from 'sequelize';
 import { catchAsync } from '../utils/catchAsync';
 import * as util from '../utils/utils.index';
-import { User } from '../models/entities/User';
-import { Profile } from '../models/entities/Profile';
-import { CaseElement } from '../models/entities/CaseElement';
-import { Publication } from '../models/entities/Publication';
-import { CaseConfiguration } from '../models/entities/CaseConfiguration';
-import { ErrorHandler } from '../utils/errorHandler';
+import { Profile, CaseElement, Publication, CaseConfiguration } from '../models/entities/entities.index';
 
 export const createCaseElement = catchAsync(async (req: Request, res: Response) => {
     const { user_id } = req.user;
     const { profiles, case_element_name, case_element_description, case_element_occurred_date } = req.body;
-    const case_element_id = uuidv4();
     const publication_id = uuidv4();
+    const case_element_id = uuidv4();
 
-    Publication.create({
-        publication_id,
-        user_id,
-    });
-
-    CaseElement.create({
-        case_element_id,
-        publication_id,
+    const schemaValidationResult = CaseElement.schemaValidation({
         case_element_name,
         case_element_description,
         case_element_occurred_date
     });
 
-    profiles.forEach(el => {
-        Profile.findAll({ where: { activity_name: el } })
-            .then(data => CaseConfiguration.create({
-                profile_id: data[0].dataValues.profile_id,
-                case_element_id
-            }))
-            .catch(e => new ErrorHandler(400, "해당 프로필을 찾을 수 없습니다!"));
-    });
+    const isValid = schemaValidationResult.error ? false : true;
 
-    util.controllerResult(res, 200);
+    if (!isValid) {
+        util.controllerResult(res, 400, schemaValidationResult.error, "유효성 검증 불통과");
+    }
+    else {
+        const profilesData = await Profile.findAll({ where: { activity_name: profiles } })
+            .then(data => { return data });
+
+        let notExistProfiles: Array<string> = [];
+        profiles.forEach((data, index) => {
+            if (profilesData[index] === undefined) {
+                notExistProfiles.push(data);
+            }
+        });
+        if (!util.isEmptyObject(notExistProfiles)) {
+            util.controllerResult(res, 400, null, notExistProfiles + " 프로필을 찾을 수 없습니다.");
+        }
+        else {
+            const caseElement = await CaseElement.findAll({
+                where: {
+                    [Op.and]: [
+                        { case_element_name },
+                        { case_element_occurred_date }
+                    ]
+                }
+            }).then(data => { return data });
+
+            if (!util.isEmptyObject(caseElement)) {
+                util.controllerResult(res, 400, null, "사건 중복");
+            } else {
+                const publication = await Publication.create({
+                    publication_id,
+                    user_id,
+                });
+
+                const case_element = await CaseElement.create({
+                    case_element_id,
+                    publication_id,
+                    case_element_name,
+                    case_element_description,
+                    case_element_occurred_date
+                });
+
+                Promise.race([publication, case_element])
+                    .then(() => profiles.forEach((data, index) => {
+                        CaseConfiguration.create({
+                            case_configuration_id: uuidv4(),
+                            profile_id: profilesData[index].profile_id,
+                            case_element_id
+                        })
+                    }))
+                    .finally(() => util.controllerResult(res, 200, {
+                        case_element_name,
+                        case_element_description,
+                        case_element_occurred_date
+                    }));
+            }
+        }
+    }
 });
 
 export const getCaseElements = catchAsync(async (req: Request, res: Response) => {
-    CaseElement.findAll().then(data => {
-        util.controllerResult(res, 200, data);
+    const { profile, page = 0, limit = 10, order = 'ASC', keyword = 'createdAt' } = req.query;
+
+    const profileData = await Profile.findAll({
+        where: { 'profile_id': profile }
     });
+
+    if (profileData === null) {
+        util.controllerResult(res, 400, null, "프로필이 존재하지 않습니다.");
+    } else {
+        const data = await CaseElement.findAndCountAll(
+            util.paginate(
+                page,
+                limit,
+                {
+                    include: [Publication],
+                    order: [[keyword, order]]
+                },
+            )
+        ).then(data => { return data });
+
+        if (data === null) {
+            util.controllerResult(res, 400, null, "사건이 존재하지 않습니다.");
+        } else util.controllerResult(res, 200, data);
+    }
 });
 
 export const getCaseElement = catchAsync(async (req: Request, res: Response) => {
-    CaseElement.findByPk(req.params.id).then(data => {
-        util.controllerResult(res, 200, data);
-    })
 });
 
 export const updateCaseElement = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
-
-    CaseElement.findByPk(id)
-        .then(() => Profile.update(
-            {
-
-            },
-            {
-                where: { case_element_id: id }
-            }));
     util.controllerResult(res, 200);
 });
 
 export const deleteCaseElement = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
-
-    Profile.findByPk(id)
-        .then(() => User.destroy({
-            where: { case_element_id: id }
-        }));
-
     util.controllerResult(res);
 });

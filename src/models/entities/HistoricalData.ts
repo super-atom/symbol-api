@@ -13,7 +13,7 @@ HistoricalData.init({
         defaultValue: Sequelize.UUIDV4,
         field: 'publication_id'
     },
-    is: {
+    is_temp_data: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
         defaultValue: false,

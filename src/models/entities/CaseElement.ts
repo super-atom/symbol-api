@@ -1,11 +1,19 @@
 import * as Sequelize from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
+import * as Joi from '@hapi/joi';
 import { connection } from '../../database/dbConnect';
-import { Human } from './Human';
-import { User } from './User';
 import { Publication } from './Publication';
 
 export class CaseElement extends Model {
+    static schemaValidation(data: object): object {
+        const schema = Joi.object({
+            case_element_name: Joi.string().required(),
+            case_element_description: Joi.string(),
+            case_element_occurred_date: Joi.date()
+        }).options({ abortEarly: false });
+
+        return schema.validate(data);
+    }
 }
 
 CaseElement.init({
@@ -27,7 +35,7 @@ CaseElement.init({
         field: 'case_element_description'
     },
     case_element_occurred_date: {
-        type: DataTypes.DATE,
+        type: DataTypes.DATEONLY,
         allowNull: false,
         field: 'case_element_occurred_date'
     },

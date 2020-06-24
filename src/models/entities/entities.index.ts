@@ -4,5 +4,6 @@ export * from './CaseElement';
 export * from './Human';
 export * from './Profile';
 export * from './Publication';
-export * from './ResourceDocument';
+export * from './Post';
+export * from './PostVideo';
 export * from './InfoDocument';

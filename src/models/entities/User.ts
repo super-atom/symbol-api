@@ -18,10 +18,10 @@ export class User extends Model {
 
     static schemaValidation(data: object): object {
         const schema = Joi.object({
-            user_type: Joi.number(),
+            user_type: Joi.number().max(1).required(),
             user_login_id: Joi.string().required().min(3).max(10),
+            user_password: Joi.string().required().min(8).max(20),
             user_email: Joi.string().required().email().max(20),
-            user_password: Joi.string().required().min(3).max(10)
         }).options({ abortEarly: false });
 
         return schema.validate(data);

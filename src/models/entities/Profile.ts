@@ -8,10 +8,10 @@ import { Publication } from './Publication';
 export class Profile extends Model {
     static schemaValidation(data: object): object {
         const schema = Joi.object({
-            activity_name: Joi.string().required(),
-            native_activity_name: Joi.string(),
-            profile_description: Joi.string(),
-            profile_type: Joi.number(),
+            activity_name: Joi.string().max(50).required(),
+            native_activity_name: Joi.string().max(50),
+            profile_description: Joi.string().max(500),
+            profile_type: Joi.number().max(1).required(),
         }).options({ abortEarly: false });
 
         return schema.validate(data);
@@ -26,6 +26,11 @@ Profile.init({
         defaultValue: Sequelize.UUIDV4,
         field: 'profile_id'
     },
+    profile_type: {
+        type: DataTypes.INTEGER(1),
+        allowNull: false,
+        field: 'profile_type'
+    },
     activity_name: {
         type: DataTypes.STRING(50),
         allowNull: false,
@@ -38,11 +43,6 @@ Profile.init({
     profile_description: {
         type: DataTypes.STRING(500),
         field: 'profile_description'
-    },
-    profile_type: {
-        type: DataTypes.INTEGER(1),
-        allowNull: false,
-        field: 'profile_type'
     },
 }, {
     sequelize: connection,

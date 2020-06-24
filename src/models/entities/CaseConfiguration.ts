@@ -1,16 +1,21 @@
 import * as Sequelize from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
 import { connection } from '../../database/dbConnect';
-import { Human } from './Human';
-import { User } from './User';
-import { Publication } from './Publication';
 import { CaseElement } from './CaseElement';
 import { Profile } from './Profile';
 
 export class CaseConfiguration extends Model {
+
 }
 
 CaseConfiguration.init({
+    case_configuration_id: {
+        type: DataTypes.UUID,
+        primaryKey: true,
+        allowNull: false,
+        defaultValue: Sequelize.UUIDV4,
+        field: 'case_configuration_id'
+    },
 }, {
     sequelize: connection,
     modelName: 'case_configuration',
