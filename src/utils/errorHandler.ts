@@ -15,4 +15,6 @@ export const handleError = (err, res) => {
         message,
         stack
     });
+
+    if (process.env.NODE_ENV === 'development') console.error(stack);
 };

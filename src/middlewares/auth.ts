@@ -17,7 +17,7 @@ export const authenticate = catchAsync(async (req: Response, res: Request, next:
     if (!token) return next(new ErrorHandler(401, "Not authorize to access this route"));
     else {
         try {
-            let decoded = jwt.verify(token, "SYMBOL");
+            const decoded = jwt.verify(token, "SYMBOL");
             req.user = await User.findByPk(decoded.user_id);
             next();
         } catch (err) {

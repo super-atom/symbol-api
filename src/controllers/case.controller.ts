@@ -26,13 +26,14 @@ export const createCaseElement = catchAsync(async (req: Request, res: Response) 
         const profilesData = await Profile.findAll({ where: { activity_name: profiles } })
             .then(data => { return data });
 
-        let notExistProfiles: Array<string> = [];
+        const notExistProfiles: Array<string> = [];
         profiles.forEach((data, index) => {
             if (profilesData[index] === undefined) {
                 notExistProfiles.push(data);
             }
         });
-        if (!util.isEmptyObject(notExistProfiles)) {
+        if (util.isEmptyObject(notExistProfiles) === false) {
+            console.log(notExistProfiles);
             util.controllerResult(res, 400, null, notExistProfiles + " 프로필을 찾을 수 없습니다.");
         }
         else {

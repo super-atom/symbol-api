@@ -40,7 +40,7 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
         Profile.schemaValidation({ profile_type, activity_name })
     ];
 
-    let schemaValidationResult: object = [];
+    const schemaValidationResult: object = [];
     schemaValidation.forEach(e => {
         if (e.error) schemaValidationResult.push(e.error)
     });

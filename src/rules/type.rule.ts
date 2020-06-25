@@ -36,4 +36,13 @@ export enum PostVideoTypeRule {
     Edited = 6
 }
 
+export enum PostImageTypeRule {
+    Untyped = 0,
+    Official = 1,
+    Activity = 2,
+    Sns = 3,
+    Fan = 4,
+    Edited = 5
+}
+
 export default UserTypeRule;

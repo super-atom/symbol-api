@@ -22,8 +22,10 @@ dist/
 *.swp
 .awcache
 
+/auth/
+
 dbConfig.ts
-src/database/config.json
-src/database/models/
-src/database/migrations/
-src/database/seeders/
+./src/database/config.json
+./src/database/models/
+./src/database/migrations/
+./src/database/seeders/

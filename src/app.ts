@@ -8,6 +8,7 @@ import * as session from 'express-session';
 import * as Sentry from '@sentry/node';
 import * as hpp from 'hpp';
 import * as csrf from 'csurf';
+import * as multer from 'multer';
 import routes from './routes/routes.index';
 import { handleError, ErrorHandler } from './utils/errorHandler';
 import { logger } from "./middlewares/logger";
@@ -25,30 +26,31 @@ class App {
         this.app.use(Sentry.Handlers.requestHandler());
         this.app.use(cors());
         this.app.use(helmet());
+        this.app.disable('x-powered-by');
+        this.app.use(multer({
+            storage: multer.memoryStorage(),
+            limits: {
+                fileSize: 5 * 1024 * 1024,
+            }
+        }).single('file'));
         this.app.use(bodyParser.json());
         this.app.use(bodyParser.urlencoded({ extended: false }));
         this.app.use(cookieParser());
         this.app.use(logger('info'));
         this.app.use(limiter);
         this.app.use(hpp());
-        this.app.use(session({
-            secret: 'keyboard cat',
-            resave: true,
-            saveUninitialized: true,
-            cookie: {
-                httpOnly: true,
-                secure: true,
-                domain: process.env.DOMAIN,
-                path: '/foo/bar',
-                expires: new Date(Date.now() + 60 * 60 * 1000)
-            }
-        }));
-
-        // this.app.use(csrf());
-        // this.app.use((req, res, next) => {
-        //     res.locals.csrftoken = req.csrfToken();
-        //     next();
-        // });
+        // this.app.use(session({
+        //     secret: 'keyboard cat',
+        //     resave: true,
+        //     saveUninitialized: true,
+        //     cookie: {
+        //         httpOnly: true,
+        //         secure: true,
+        //         domain: process.env.DOMAIN,
+        //         path: '/foo/bar',
+        //         expires: new Date(Date.now() + 60 * 60 * 1000)
+        //     }
+        // }));
         this.app.use("/", routes);
         this.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
             handleError(err, res);

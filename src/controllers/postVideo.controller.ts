@@ -1,12 +1,9 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
-import { Op } from 'sequelize';
 import { catchAsync } from '../utils/catchAsync';
 import * as util from '../utils/utils.index';
 import { PostTypeRule } from '../rules/type.rule';
-import { Post, PostVideo, Profile, Publication, CaseElement } from '../models/entities/entities.index';
-import { when } from '@hapi/joi';
-import { CaseConfiguration } from '../models/entities/CaseConfiguration';
+import { Post, PostVideo, Profile, Publication, CaseElement, CaseConfiguration } from '../models/entities/entities.index';
 
 export const createPostVideo = catchAsync(async (req: Request, res: Response) => {
     const { user_id } = req.user;
@@ -30,7 +27,7 @@ export const createPostVideo = catchAsync(async (req: Request, res: Response) =>
         })
     ];
 
-    let schemaValidationResult: object = [];
+    const schemaValidationResult: object = [];
     schemaValidation.forEach(e => {
         if (e.error) schemaValidationResult.push(e.error);
     });

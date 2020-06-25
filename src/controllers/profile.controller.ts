@@ -37,7 +37,7 @@ export const createProfile = catchAsync(async (req: Request, res: Response) => {
         })
     ];
 
-    let schemaValidationResult: object = [];
+    const schemaValidationResult: object = [];
     schemaValidation.forEach(e => {
         if (e.error) schemaValidationResult.push(e.error)
     });

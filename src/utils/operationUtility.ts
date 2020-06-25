@@ -1,4 +1,3 @@
 export function isEmptyObject(obj) {
-    return Object.keys(obj).length === 0
-    // && Object.constructor === Object
+    return Object.keys(obj).length === 0;
 }

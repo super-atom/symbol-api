@@ -29,7 +29,7 @@ export const loginUser = catchAsync(async (req: Request, res: Response, next: Ne
         if (user === null) {
             util.controllerResult(res, 400, null, user_login_id + " 사용자가 존재하지 않습니다.");
         } else {
-            let buff = user.user_password;
+            const buff = user.user_password;
             const check = User.isValidPassword(user_password, buff.toString());
             if (!check) {
                 util.controllerResult(res, 400, null, "비밀번호가 일치하지 않습니다.");
