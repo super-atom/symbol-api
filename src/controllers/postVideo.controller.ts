@@ -1,21 +1,34 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { catchAsync } from '../utils/catchAsync';
-import * as util from '../utils/utils.index';
-import { PostTypeRule } from '../rules/type.rule';
+import * as utils from '../utils/utils.index';
+import { PostTypeRule, PostVideoTypeRule } from '../rules/type.rule';
 import { Post, PostVideo, Profile, Publication, CaseElement, CaseConfiguration } from '../models/entities/entities.index';
+import { getQueryUnitRule } from '../rules/unit.rule';
 
-export const createPostVideo = catchAsync(async (req: Request, res: Response) => {
-    const { user_id } = req.user;
-    const { profile, post_title, post_content, post_video_type, post_video_access_code } = req.body;
-    const { case_element_id } = req.body;
-    const post_type = PostTypeRule.Video;
+async function getPostVideoAttributes(req: Request) {
+    let { post_type, post_title, post_content, post_video_type, post_video_access_code, case_element_id } = req.body;
 
-    const publication_id = uuidv4();
-    const post_id = uuidv4();
-    const post_video_id = uuidv4();
+    // TODO: USING AJV pacakge
 
-    const schemaValidation = [
+    return {
+        post_type, post_title, post_content, post_video_type, post_video_access_code, case_element_id
+    }
+}
+
+export async function validatePostVideo(req: Request, res: Response, next: NextFunction): Promise<T> {
+    const input = await getPostVideoAttributes(req).then(data => { return data });
+    const { post_title, post_content, post_video_access_code, case_element_id, post_video_type } = input;
+    let { post_type = PostTypeRule.Video } = input;
+    let { profile } = req.body;
+
+    const schemaValidations = [
+        CaseElement.schemaValidation({
+            case_element_id
+        }),
+        Profile.schemaValidation({
+            activity_name: profile,
+        }),
         Post.schemaValidation({
             post_type,
             post_title,
@@ -27,102 +40,117 @@ export const createPostVideo = catchAsync(async (req: Request, res: Response) =>
         })
     ];
 
-    const schemaValidationResult: object = [];
-    schemaValidation.forEach(e => {
-        if (e.error) schemaValidationResult.push(e.error);
+    let schemaValidationResults = [];
+    schemaValidations.forEach(e => {
+        if (e.error) schemaValidationResults.push(e.error)
     });
+    const isValid = utils.isEmptyData(schemaValidationResults);
 
-    const isValid = schemaValidationResult.error ? false : true;
+    console.log("??", schemaValidationResults);
 
-    if (!isValid) {
-        util.controllerResult(res, 400, schemaValidationResult, "유효성 검증 불통과");
+    if (isValid === false) {
+        utils.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
+    } else {
+        return next();
+    }
+};
+
+export const createPostVideo = catchAsync(async (req: Request, res: Response) => {
+    const { user_id } = req.user;
+    const input = await getPostVideoAttributes(req).then(data => { return data });
+    const { case_element_id, post_title, post_content, post_video_access_code, post_video_type } = input;
+    let { profile } = req.body;
+
+    const publication_id = uuidv4();
+    const post_id = uuidv4();
+    const post_video_id = uuidv4();
+    let isFinalCheck = false;
+
+    const profileData = await Profile.findOne({ where: { activity_name: profile } })
+        .then(data => { return data });
+
+    // Final Check
+    if (utils.isEmptyData(profileData)) {
+        utils.controllerResult(res, 400, null, profile + " 프로필을 찾을 수 없습니다.");
     }
     else {
-        const profileData = await Profile.findOne({ where: { activity_name: profile } })
-            .then(data => { return data });
+        const caseElement = await CaseElement.findOne({ where: { case_element_id } });
+        const isExistCaseElement = caseElement === null ? false : true;
 
-        if (util.isEmptyObject(profileData)) {
-            util.controllerResult(res, 400, null, profile + " 프로필을 찾을 수 없습니다.");
-        }
-        else {
-            const caseElement = await CaseElement.findOne({ where: { case_element_id } });
-            const isExistCaseElement = util.isEmptyObject(caseElement) ? false : true;
+        if (isExistCaseElement === false) {
+            utils.controllerResult(res, 400, null, "해당 케이스를 찾을 수 없습니다.")
+        } else {
+            const caseConf = await CaseConfiguration.findOne({
+                where: { case_element_id }
+            });
+            const isEquelCaseConfAndProfile = (caseConf.profile_id === profileData.profile_id);
 
-            if (isExistCaseElement === false) {
-                util.controllerResult(res, 400, null, "해당 케이스를 찾을 수 없습니다.")
-            } else {
-                const caseConfiguration = await CaseConfiguration.findOne({
-                    where: { case_element_id }
-                });
-                const isExistCaseConfiguration = util.isEmptyObject(caseConfiguration) ? false : true;
-                const isEquelCaseConfAndProfile = (caseConfiguration.profile_id === profileData.profile_id);
-
-                if (isExistCaseConfiguration === false) {
-                    util.controllerResult(res, 400, null, "해당 케이스 구성을 찾을 수 없습니다.");
-                }
-                else if (isEquelCaseConfAndProfile) {
-                    const profile_id = profileData.profile_id;
-
-                    const publication = Publication.create({
-                        publication_id,
-                        user_id
-                    });
-
-                    const post = Post.create({
-                        publication_id,
-                        profile_id,
-                        case_element_id,
-                        post_id,
-                        user_id,
-                        post_type,
-                        post_title,
-                        post_content
-                    });
-
-                    const postVideo = PostVideo.create({
-                        post_id,
-                        post_video_id,
-                        post_video_type,
-                        post_video_access_code,
-                    });
-
-                    Promise.race([publication, post, postVideo])
-                        .finally(() => util.controllerResult(res, 200));
-                }
+            if (utils.isEmptyData(caseConf)) {
+                utils.controllerResult(res, 400, null, "해당 케이스 구성을 찾을 수 없습니다.");
+            }
+            else if (isEquelCaseConfAndProfile) {
+                isFinalCheck = true;
             }
         }
+    }
+
+    if (isFinalCheck) {
+        const profile_id = profileData.profile_id;
+
+        const publication = await Publication.create({
+            publication_id,
+            user_id
+        });
+
+        const post = await Post.create({
+            publication_id,
+            profile_id,
+            case_element_id,
+            post_id,
+            user_id,
+            post_type,
+            post_title,
+            post_content
+        });
+
+        const postVideo = await PostVideo.create({
+            post_id,
+            post_video_id,
+            post_video_type,
+            post_video_access_code,
+        });
+
+        Promise.race([publication, post, postVideo])
+            .finally(() => utils.controllerResult(res, 200));
     }
 });
 
 export const getPostVideos = catchAsync(async (req: Request, res: Response) => {
-    const { profile, page = 0, limit = 10, order = 'ASC', keyword = 'createdAt' } = req.query;
+    const { page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
+    let { profiles } = req.query;
 
-    const data = await PostVideo.findAndCountAll(util.paginate(
+    let sql = {
+        include: {
+            model: Post
+        },
+        order: [[sortBy, order]],
+    };
+    if (utils.isEmptyData(profiles) !== false) sql.include.where = { profile_id: profiles };
+
+    const data = await PostVideo.findAndCountAll(sql = utils.paginate(
         page,
         limit,
-        {
-            include: {
-                model: Post,
-                where: {
-                    profile_id: profile
-                }
-            },
-            order: [[keyword, order]],
-        }
+        sql
     )).then(data => { return data });
-
-    if (data === null) {
-        util.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
-    }
-    else {
-        util.controllerResult(res, 200, data);
-    }
+    utils.controllerResult(res, 200, data);
 });
 
 export const getPostVideo = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const data = await Post.findByPk(id).then(data => { return data });
-    util.controllerResult(res, 200, data);
+    await Post.findByPk(id)
+        .then(data => { return data })
+        .finally((data) => utils.controllerResult(res, 200, data));
+    ;
 });
 
 export const updatePostVideo = catchAsync(async (req: Request, res: Response) => {
@@ -140,10 +168,10 @@ export const updatePostVideo = catchAsync(async (req: Request, res: Response) =>
             }));
 
     if (data === null) {
-        util.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
+        utils.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
     }
     else {
-        util.controllerResult(res, 200, data);
+        utils.controllerResult(res, 200, data);
     }
 });
 
@@ -154,7 +182,7 @@ export const deletePostVideo = catchAsync(async (req: Request, res: Response) =>
         .then(data => { return data });
 
     if (publication === null) {
-        util.controllerResult(res, 400, null, "대상을 찾을 수 없습니다.");
+        utils.controllerResult(res, 400, null, "대상을 찾을 수 없습니다.");
     }
     else {
         const publication_id = publication.publication_id;
@@ -164,10 +192,10 @@ export const deletePostVideo = catchAsync(async (req: Request, res: Response) =>
         );
 
         if (data === null) {
-            util.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
+            utils.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
         }
         else {
-            util.controllerResult(res, 200, data);
+            utils.controllerResult(res, 200, data);
         }
     }
 });

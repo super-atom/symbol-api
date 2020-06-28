@@ -6,22 +6,25 @@ import { v4 as uuidv4 } from 'uuid';
 import { User, Profile, Human, InfoDocument, Publication } from '../models/entities/entities.index';
 import * as util from '../utils/utils.index';
 import { catchAsync } from '../utils/catchAsync';
-import { ProfileTypeRule } from '../rules/type.rule';
+import { ProfileTypeRule, PublicationTypeRule } from '../rules/type.rule';
 import UserTypeRule from '../rules/type.rule';
+import { getQueryUnitRule } from '../rules/unit.rule';
 
-export const createUser = catchAsync(async (req: Request, res: Response) => {
-    const { user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, } = req.body;
-    const user_type = UserTypeRule.User;
-    const profile_type = ProfileTypeRule.User;
-    let { activity_name } = req.body;
-    if (!activity_name) activity_name = user_login_id;
+async function getUserAttributes(req: Request) {
+    let { user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, user_type, profile_type, activity_name, is_delete, publication_type } = req.body;
 
-    const profile_id = uuidv4();
-    const human_id = uuidv4();
-    const user_id = uuidv4();
-    const publication_id = uuidv4();
+    // TODO: USING AJV pacakge
 
-    const schemaValidation = [
+    return {
+        user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, user_type, profile_type, activity_name, is_delete, publication_type
+    }
+}
+
+export async function validateUser(req: Request, res: Response, next: NextFunction): Promise<T> {
+    const input = await getUserAttributes(req).then(data => { return data });
+    const { user_type, profile_type, activity_name, user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, publication_type } = input;
+
+    const schemaValidations = [
         User.schemaValidation({
             user_type,
             user_login_id,
@@ -37,94 +40,112 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
             activity_country,
             current_live_city
         }),
-        Profile.schemaValidation({ profile_type, activity_name })
+        Profile.schemaValidation({ profile_type, activity_name }),
+        Publication.schemaValidation({ publication_type })
     ];
 
-    const schemaValidationResult: object = [];
-    schemaValidation.forEach(e => {
-        if (e.error) schemaValidationResult.push(e.error)
+    let schemaValidationResults: object = [];
+    schemaValidations.forEach(e => {
+        if (e.error) schemaValidationResults.push(e)
     });
-    const isValid = util.isEmptyObject(schemaValidationResult);
+    const isValid = util.isEmptyData(schemaValidationResults);
 
-    if (!isValid) {
-        util.controllerResult(res, 400, schemaValidationResult, "유효성 검증 불통과");
+    if (isValid === false) {
+        util.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
+    } else {
+        return next();
+    }
+};
+
+export const createUser = catchAsync(async (req: Request, res: Response) => {
+    const input = await getUserAttributes(req).then(data => { return data });
+    const { user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city } = input;
+    let { user_type, profile_type, activity_name, publication_type } = input;
+
+    const profile_id = uuidv4();
+    const human_id = uuidv4();
+    const user_id = uuidv4();
+    const publication_id = uuidv4();
+
+    user_type = UserTypeRule.User;
+    profile_type = ProfileTypeRule.User;
+    publication_type = PublicationTypeRule.Profile;
+    if (util.isEmptyData(activity_name)) activity_name = user_login_id;
+
+    const user = await User.findAll({ where: { [Op.or]: [{ user_login_id }, { user_email }] } }).then(data => { return data });
+
+    if (!util.isEmptyData(user)) {
+        util.controllerResult(res, 400, null, "아이디 또는 이메일 중복");
     }
     else {
-        await User.findAll({ where: { [Op.or]: [{ user_login_id }, { user_email }] } })
-            .then(data => {
-                if (!util.isEmptyObject(data)) {
-                    util.controllerResult(res, 400, null, "아이디 또는 이메일 중복");
-                }
-                else {
-                    const human = Human.create({
-                        human_id,
-                        gender,
-                        birthday,
-                        real_name,
-                        birth_country,
-                        birth_city,
-                        activity_country,
-                        current_live_city,
-                    })
+        const human = Human.create({
+            human_id,
+            gender,
+            birthday,
+            real_name,
+            birth_country,
+            birth_city,
+            activity_country,
+            current_live_city,
+        })
 
-                    const user = User.create({
-                        user_id,
-                        human_id,
-                        user_type,
-                        user_login_id,
-                        user_email,
-                        user_password: bcrypt.hashSync(user_password, 10),
-                    })
+        const user = User.create({
+            user_id,
+            human_id,
+            user_type,
+            user_login_id,
+            user_email,
+            user_password: User.encryptPassword(user_password),
+        })
 
-                    const publication = Publication.create({
-                        publication_id,
-                        user_id
-                    })
+        const publication = Publication.create({
+            publication_id,
+            publication_type,
+            user_id
+        })
 
-                    const profile = Profile.create({
-                        profile_id,
-                        human_id,
-                        publication_id,
-                        activity_name,
-                        profile_type
-                    });
+        const profile = Profile.create({
+            profile_id,
+            human_id,
+            publication_id,
+            activity_name,
+            profile_type
+        });
 
-                    const info_document = InfoDocument.create({
-                        profile_id
-                    });
+        const info_document = InfoDocument.create({
+            profile_id
+        });
 
-                    Promise.race([human, user, publication, profile, info_document])
-                        .finally(() => util.controllerResult(res, 200, {
-                            user_login_id,
-                            user_email,
-                            birthday,
-                            real_name,
-                            birth_country,
-                            birth_city,
-                            activity_country,
-                            current_live_city
-                        }));
-                }
-            })
+        Promise
+            .race([human, user, publication, profile, info_document])
+            .finally(() => util.controllerResult(res, 200, {
+                user_login_id,
+                user_email,
+                birthday,
+                real_name,
+                birth_country,
+                birth_city,
+                activity_country,
+                current_live_city
+            }));
     }
 });
 
 export const getUsers = catchAsync(async (req: Request, res: Response) => {
-    const { page = 0, limit = 10, order = 'ASC', keyword = 'createdAt' } = req.query;
+    const { page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
 
     const data = await User.findAndCountAll(util.paginate(
         page,
         limit,
         {
             where: { [Op.not]: [{ is_delete: 1 }] },
-            order: [[keyword, order]]
+            order: [[sortBy, order]]
         }
     )).then(data => { return data });
 
-    if (data === null) {
-        util.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
-    }
-    else {
+    if (util.isEmptyData(data)) {
+        util.controllerResult(res, 400, null);
+    } else {
         util.controllerResult(res, 200, data);
     }
 });
@@ -132,53 +153,73 @@ export const getUsers = catchAsync(async (req: Request, res: Response) => {
 export const getUser = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
 
-    const data = await User.findOne({
+    const user = await User.findOne({
         where: { user_id: id },
         include: [Human]
     }).then(data => { return data });
 
-    if (data === null) {
-        util.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
+    if (util.isEmptyData(user)) {
+        util.controllerResult(res, 400, null)
     }
     else {
-        const { user_id, user_type, user_login_id, user_email, user_contribute_point, is_delete, createdAt, updatedAt, human } = data;
-        util.controllerResult(res, 200, { user_id, user_type, user_login_id, user_email, user_contribute_point, is_delete, createdAt, updatedAt, human });
+        const { user_type, user_login_id, user_email, user_contribute_point, is_delete, createdAt, updatedAt, human } = user;
+        util.controllerResult(res, 200, {
+            user_type, user_login_id, user_email, user_contribute_point, is_delete, createdAt, updatedAt, human
+        });
     }
 });
 
 export const updateUser = catchAsync(async (req: Request, res: Response) => {
-    const { user_email, is_delete } = req.body;
+    const input = await getUserAttributes(req).then(data => { return data });
+    const { user_email, is_delete, activity_name, profile_type } = input;
     const { id } = req.params;
-    const data = await User.findOne({
+    let profile;
+    let isFinalCheck = false;
+
+    const user = await User.findOne({
         where: { user_id: id },
         include: [Human]
-    }).then(data => { return data });
+    }).then(user => { return user });
 
-    if (data === null) {
-        util.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
+    // FinalCheck
+    if (util.isEmptyData(user)) {
+        util.controllerResult(res, 400, null, "유저를 찾을 수 없습니다");
     } else {
-        const data = await User.update(
+        profile = await Profile.findOne({
+            where: { human_id: user.human.human_id }
+        });
+
+        if (util.isEmptyData(profile)) {
+            util.controllerResult(res, 400, null, "프로필을 찾을 수 없습니다");
+        } else {
+            isFinalCheck = true;
+        }
+    }
+
+    if (isFinalCheck) {
+        await User.update(
             { user_email, is_delete, },
             { where: { user_id: id } }
         );
 
-        if (data === null) {
-            util.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
-        }
-        else {
-            util.controllerResult(res, 200, data);
-        }
+        await Profile.update(
+            { activity_name, profile_type },
+            { where: user.human.human_id }
+        );
+
+        util.controllerResult(res, 200);
     }
 });
 
 export const deleteUser = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
     const user = await User.findByPk(id).then(data => { return data });
-    if (user === null) {
-        util.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
+
+    if (util.isEmptyData(user)) {
+        util.controllerResult(res, 400, null)
     }
     else {
-        User.update({ is_delete: 1 }, { where: { user_id: id } });
-        util.controllerResult(res, 200, user);
+        await User.update({ is_delete: 1 }, { where: { user_id: id } });
+        util.controllerResult(res, 200);
     }
 });

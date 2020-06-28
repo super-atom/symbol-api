@@ -1,9 +1,25 @@
 import * as Sequelize from 'sequelize';
 import { DataTypes, Model } from 'sequelize';
+import * as Joi from '@hapi/joi';
 import { connection } from '../../database/dbConnect';
 import { User } from './User';
 
 export class Publication extends Model {
+    static schemaValidation(data: object): object {
+        const schema = Joi.object({
+            publication_id: Joi.string().guid({ version: 'uuidv4' }),
+            publication_type: Joi.number().min(1).max(4),
+            perfection: Joi.number().max(100),
+            perfection_state: Joi.number(),
+            view_count: Joi.number(),
+            is_hide: Joi.number().max(1),
+            is_delete: Joi.number().max(1),
+            is_published: Joi.number().max(1),
+            is_temp_data: Joi.number().max(1),
+        }).options({ abortEarly: false });
+
+        return schema.validate(data);
+    }
 }
 
 Publication.init({
@@ -14,11 +30,15 @@ Publication.init({
         defaultValue: Sequelize.UUIDV4,
         field: 'publication_id'
     },
-    // publication_type: {
-    //     type: DataTypes.TINYINT(1),
-    //     allowNull: false,
-    //     field: 'publication_type'
-    // },
+    publication_type: {
+        type: DataTypes.TINYINT(1),
+        allowNull: false,
+        validate: {
+            min: 1,
+            max: 4
+        },
+        field: 'publication_type'
+    },
     perfection: {
         type: DataTypes.INTEGER(3),
         allowNull: false,

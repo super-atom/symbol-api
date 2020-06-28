@@ -10,7 +10,8 @@ import { CaseElement } from './CaseElement';
 export class Post extends Model {
     static schemaValidation(data: object): object {
         const schema = Joi.object({
-            post_type: Joi.number().max(1),
+            post_id: Joi.string().guid({ version: 'uuidv4' }),
+            post_type: Joi.number().min(1).max(4),
             post_title: Joi.string().max(100).required(),
             post_content: Joi.string().max(500)
         }).options({ abortEarly: false });
@@ -28,8 +29,12 @@ Post.init({
         field: 'post_id'
     },
     post_type: {
-        type: DataTypes.INTEGER(1),
+        type: DataTypes.TINYINT(1),
         allowNull: false,
+        validate: {
+            min: 1,
+            max: 4
+        },
         field: 'post_type'
     },
     post_title: {

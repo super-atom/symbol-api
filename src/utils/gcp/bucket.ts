@@ -1,5 +1,5 @@
 import { storage, bucketName } from '../../database/gcStorage';
-import * as dateFormat from 'date-fns';
+import * as dateFns from 'date-fns';
 
 const bucket = storage.bucket(bucketName);
 
@@ -23,7 +23,7 @@ export async function getBucketMetadata() {
 }
 
 export async function uploadFile(filename, filenameToSave) {
-    if (filenameToSave === false) filenameToSave = "noname_" + dateFormat.formatISO(new Date());
+    if (filenameToSave === false) filenameToSave = "noname_" + dateFns.formatISO(new Date());
     const file = bucket.file(filenameToSave);
     const buff = Buffer.from(filename, 'binary').toString('utf-8');
 

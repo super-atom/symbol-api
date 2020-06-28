@@ -7,7 +7,8 @@ import { Publication } from './Publication';
 export class CaseElement extends Model {
     static schemaValidation(data: object): object {
         const schema = Joi.object({
-            case_element_name: Joi.string().required(),
+            case_element_id: Joi.string().guid({ version: 'uuidv4' }),
+            case_element_name: Joi.string(),
             case_element_description: Joi.string(),
             case_element_occurred_date: Joi.date()
         }).options({ abortEarly: false });

@@ -1,23 +1,23 @@
-{
-    "development": {
-        "username": "root",
-        "password": "chfldzm2",
-        "database": "symbol",
-        "host": "34.85.78.141",
-        "dialect": "mysql"
-    },
-    "test": {
-        "username": "root",
-        "password": "chfldzm2",
-        "database": "symbol",
-        "host": "34.85.78.141",
-        "dialect": "mysql"
-    },
-    "production": {
-        "username": "root",
-        "password": "chfldzm2",
-        "database": "symbol",
-        "host": "34.85.78.141",
-        "dialect": "mysql"
-    }
-}
+// {
+//     "development": {
+//         "username": "root",
+//         "password": "chfldzm2",
+//         "database": "symbol",
+//         "host": "34.85.78.141",
+//         "dialect": "mysql"
+//     },
+//     "test": {
+//         "username": "root",
+//         "password": "chfldzm2",
+//         "database": "symbol",
+//         "host": "34.85.78.141",
+//         "dialect": "mysql"
+//     },
+//     "production": {
+//         "username": "root",
+//         "password": "chfldzm2",
+//         "database": "symbol",
+//         "host": "34.85.78.141",
+//         "dialect": "mysql"
+//     }
+// }

@@ -8,6 +8,10 @@ import { Human } from './Human';
 import UserTypeRule from '../../rules/type.rule';
 
 export class User extends Model {
+    static encryptPassword(user_password: number): string {
+        return bcrypt.hashSync(user_password, 10);
+    }
+
     static isValidPassword(user_password: string, password: string): boolean {
         return bcrypt.compareSync(user_password, password);
     }
@@ -18,10 +22,11 @@ export class User extends Model {
 
     static schemaValidation(data: object): object {
         const schema = Joi.object({
-            user_type: Joi.number().max(1).required(),
-            user_login_id: Joi.string().required().min(3).max(10),
-            user_password: Joi.string().required().min(8).max(20),
-            user_email: Joi.string().required().email().max(20),
+            user_id: Joi.string().guid({ version: 'uuidv4' }),
+            user_type: Joi.number().max(1),
+            user_login_id: Joi.string().min(3).max(10),
+            user_password: Joi.string().min(8).max(20),
+            user_email: Joi.string().email().max(20),
         }).options({ abortEarly: false });
 
         return schema.validate(data);
@@ -40,6 +45,10 @@ User.init({
         type: DataTypes.INTEGER(1),
         allowNull: false,
         defaultValue: UserTypeRule.User,
+        validate: {
+            min: 0,
+            max: 4
+        },
         field: 'user_type'
     },
     user_login_id: {

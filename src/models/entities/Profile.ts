@@ -8,10 +8,11 @@ import { Publication } from './Publication';
 export class Profile extends Model {
     static schemaValidation(data: object): object {
         const schema = Joi.object({
-            activity_name: Joi.string().max(50).required(),
+            profile_id: Joi.string().guid({ version: 'uuidv4' }),
+            activity_name: Joi.string().max(50),
             native_activity_name: Joi.string().max(50),
             profile_description: Joi.string().max(500),
-            profile_type: Joi.number().max(1).required(),
+            profile_type: Joi.number().min(1).max(5),
         }).options({ abortEarly: false });
 
         return schema.validate(data);
@@ -27,8 +28,12 @@ Profile.init({
         field: 'profile_id'
     },
     profile_type: {
-        type: DataTypes.INTEGER(1),
+        type: DataTypes.TINYINT(1),
         allowNull: false,
+        validate: {
+            min: 1,
+            max: 5
+        },
         field: 'profile_type'
     },
     activity_name: {

@@ -9,10 +9,12 @@ import * as Sentry from '@sentry/node';
 import * as hpp from 'hpp';
 import * as csrf from 'csurf';
 import * as multer from 'multer';
+import * as compression from 'compression';
 import routes from './routes/routes.index';
 import { handleError, ErrorHandler } from './utils/errorHandler';
 import { logger } from "./middlewares/logger";
 import { limiter } from './middlewares/rateLimiter';
+import * as methodOverride from 'method-override';
 
 class App {
     public app: express.Application;
@@ -23,7 +25,8 @@ class App {
     }
 
     private config(): void {
-        this.app.use(Sentry.Handlers.requestHandler());
+        // this.app.use(Sentry.Handlers.requestHandler());
+        this.app.use(methodOverride('X-HTTP-Method-Override'));
         this.app.use(cors());
         this.app.use(helmet());
         this.app.disable('x-powered-by');
@@ -51,11 +54,12 @@ class App {
         //         expires: new Date(Date.now() + 60 * 60 * 1000)
         //     }
         // }));
+        this.app.use(compression());
         this.app.use("/", routes);
         this.app.use((err: ErrorHandler, req: Request, res: Response, next: NextFunction) => {
             handleError(err, res);
         });
-        this.app.use(Sentry.Handlers.errorHandler());
+        // this.app.use(Sentry.Handlers.errorHandler());
     }
 }
 

@@ -1,8 +1,9 @@
 import * as jwt from 'jsonwebtoken';
+import { Response, Request, NextFunction } from 'express';
 import { catchAsync } from '../utils/catchAsync';
 import { ErrorHandler } from '../utils/errorHandler';
-import { Response, Request, NextFunction } from 'express';
 import { User } from '../models/entities/User';
+import * as utils from '../utils/utils.index';
 
 export const authenticate = catchAsync(async (req: Response, res: Request, next: NextFunction) => {
     let token;
@@ -17,7 +18,7 @@ export const authenticate = catchAsync(async (req: Response, res: Request, next:
     if (!token) return next(new ErrorHandler(401, "Not authorize to access this route"));
     else {
         try {
-            const decoded = jwt.verify(token, "SYMBOL");
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = await User.findByPk(decoded.user_id);
             next();
         } catch (err) {
@@ -26,10 +27,19 @@ export const authenticate = catchAsync(async (req: Response, res: Request, next:
     }
 });
 
-export const authorize = (role: number) => {
-    return (req, res, next) => {
-        const check = (role <= req.user.user_type);
-        if (!check) return next(new ErrorHandler(400, "권한이 없습니다!"));
-        next();
+export const authorize = (req: Response, res: Request, next: NextFunction, role: number) => {
+    // FIXME: 고쳐야됨
+    return (req: Response, res: Request, next: NextFunction) => {
+        let user_type;
+        if (utils.isEmptyData(req.user.user_type)) {
+            return next(new ErrorHandler(400, "로그인이 필요합니다!"));
+        } else {
+            user_type = req.user.user_type;
+            if (role > user_type) {
+                return next(new ErrorHandler(400, "권한이 없습니다!"));
+            } else {
+                next();
+            }
+        }
     }
 };

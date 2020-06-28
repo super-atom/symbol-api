@@ -20,7 +20,7 @@ HistoricalData.init({
         field: 'is_temp_data'
     },
     action_type: {
-        type: DataTypes.INTEGER(1),
+        type: DataTypes.TINYINT(1),
         allowNull: false,
         defaultValue: 1,
         field: 'action_type'

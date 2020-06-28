@@ -2,24 +2,26 @@ import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 import { catchAsync } from '../utils/catchAsync';
-import * as util from '../utils/utils.index';
-import { User } from '../models/entities/User';
-import { Profile } from '../models/entities/Profile';
-import { InfoDocument } from '../models/entities/InfoDocument';
-import { Publication } from '../models/entities/Publication';
-import { Human } from '../models/entities/Human';
-import { ProfileTypeRule } from '../rules/type.rule';
+import * as utils from '../utils/utils.index';
+import { Profile, InfoDocument, Publication, Human } from '../models/entities/entities.index';
+import { ProfileTypeRule, PublicationTypeRule } from '../rules/type.rule';
+import { getQueryUnitRule } from '../rules/unit.rule';
 
-export const createProfile = catchAsync(async (req: Request, res: Response) => {
-    const { user_id } = req.user;
-    const { gender, age, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description } = req.body;
-    const profile_type = ProfileTypeRule.User;
+async function getProfileAttributes(req: Request) {
+    let { profile_type, gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description } = req.body;
 
-    const human_id = uuidv4();
-    const profile_id = uuidv4();
-    const publication_id = uuidv4();
+    // TODO: USING AJV pacakge
 
-    const schemaValidation = [
+    return {
+        profile_type, gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description
+    }
+}
+
+export async function validateProfile(req: Request, res: Response, next: NextFunction): Promise<T> {
+    const input = await getProfileAttributes(req).then(data => { return data });
+    const { gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description, profile_type, activity_name } = input;
+
+    const schemaValidations = [
         Human.schemaValidation({
             gender,
             birthday,
@@ -37,89 +39,109 @@ export const createProfile = catchAsync(async (req: Request, res: Response) => {
         })
     ];
 
-    const schemaValidationResult: object = [];
-    schemaValidation.forEach(e => {
-        if (e.error) schemaValidationResult.push(e.error)
+    let schemaValidationResults: object = [];
+    schemaValidations.forEach(e => {
+        if (e.error) schemaValidationResults.push(e.error)
     });
-    const isValid = util.isEmptyObject(schemaValidationResult);
+    const isValid = utils.isEmptyData(schemaValidationResults);
 
-    if (!isValid) {
-        util.controllerResult(res, 400, schemaValidationResult, "유효성 검증 불통과");
+    if (isValid === false) {
+        utils.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
+    } else {
+        return next();
+    }
+};
+
+export const createProfile = catchAsync(async (req: Request, res: Response) => {
+    const { user_id } = req.user;
+    const input = await getProfileAttributes(req).then(data => { return data });
+    const { gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description } = input;
+    const profile_type = ProfileTypeRule.User;
+    const publication_type = PublicationTypeRule.Profile;
+
+    const human_id = uuidv4();
+    const profile_id = uuidv4();
+    const publication_id = uuidv4();
+
+    const profile = await Profile.findAll({
+        include: [{
+            model: Human,
+            attributes: ['birthday'],
+            where: { birthday }
+        }],
+        where: { activity_name }
+    }).then(data => { return data });
+
+    if (!utils.isEmptyData(profile)) {
+        utils.controllerResult(res, 400, null, "동일인물이 이미 존재합니다.");
     }
     else {
-        await Profile.findAll({
-            include: [{
-                model: Human,
-                attributes: ['birthday', 'activity_country'],
-            }],
-            where: { activity_name }
-        }).then(data => {
-            if (!util.isEmptyObject(data)) {
-                util.controllerResult(res, 400, null, "동일인물이 이미 존재합니다.");
-            }
-            else {
-                const human = Human.create({
-                    human_id,
-                    gender,
-                    age,
-                    birthday,
-                    real_name,
-                    birth_country,
-                    birth_city,
-                    activity_country,
-                    current_live_city,
-                });
-
-                const publication = Publication.create({
-                    publication_id,
-                    user_id
-                });
-
-                const profile = Profile.create({
-                    profile_id,
-                    human_id,
-                    publication_id,
-                    profile_type,
-                    activity_name
-                });
-
-                const info_document = InfoDocument.create({
-                    profile_id
-                });
-
-                Promise.race([human, publication, profile, info_document])
-                    .finally(() => util.controllerResult(res, 200, {
-                        activity_name,
-                        age,
-                        birthday,
-                        real_name,
-                        birth_country,
-                        birth_city,
-                        activity_country,
-                        current_live_city
-                    }));
-            }
+        const human = await Human.create({
+            human_id,
+            gender,
+            birthday,
+            real_name,
+            birth_country,
+            birth_city,
+            activity_country,
+            current_live_city,
         });
+
+        const publication = await Publication.create({
+            publication_id,
+            publication_type,
+            user_id
+        });
+
+        const profile = await Profile.create({
+            profile_id,
+            human_id,
+            publication_id,
+            profile_type,
+            activity_name,
+            native_activity_name,
+            profile_description
+        });
+
+        const info_document = await InfoDocument.create({
+            profile_id
+        });
+
+        Promise
+            .race([human, publication, profile, info_document])
+            .finally(() => utils.controllerResult(res, 200, {
+                activity_name,
+                birthday,
+                real_name,
+                birth_country,
+                birth_city,
+                activity_country,
+                current_live_city
+            }));
     }
 });
 
 export const getProfiles = catchAsync(async (req: Request, res: Response) => {
-    const { page = 0, limit = 10, order = 'ASC', keyword = 'createdAt' } = req.query;
-
-    const data = await Profile.findAndCountAll(util.paginate(
+    const { page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
+    let { profiles } = req.query;
+    let sql = {
+        include: [Publication],
+        order: [[sortBy, order]]
+    };
+    if (utils.isEmptyData(profiles) === false) {
+        sql.include.where = { activity_name: profiles };
+    }
+    const data = await Profile.findAndCountAll(utils.paginate(
         page,
         limit,
-        {
-            include: [Publication],
-            order: [[keyword, order]]
-        }
+        sql
     )).then(data => { return data });
 
-    if (data === null) {
-        util.controllerResult(res, 400, null, "데이터를 찾을 수 없습니다.")
+    if (utils.isEmptyData(data)) {
+        utils.controllerResult(res, 400, null, "데이터를 찾을 수 없습니다.")
     }
     else {
-        util.controllerResult(res, 200, data);
+        utils.controllerResult(res, 200, data);
     }
 });
 
@@ -131,19 +153,19 @@ export const getProfile = catchAsync(async (req: Request, res: Response) => {
     }).then(data => { return data });
 
     if (data === null) {
-        util.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
+        utils.controllerResult(res, 400, null, "프로필을 찾을 수 없습니다.")
     }
     else {
-        util.controllerResult(res, 200, data);
+        utils.controllerResult(res, 200, data);
     }
 });
 
 export const updateProfile = catchAsync(async (req: Request, res: Response) => {
-    const { profile_description, activity_name, native_activity_name } = req.body;
     const { id } = req.params;
-    const profile_type = ProfileTypeRule.User;
+    const input = await getProfileAttributes(req).then(data => { return data });
+    const { profile_type, profile_description, activity_name, native_activity_name } = input;
 
-    const data = await Profile.findByPk(id)
+    const user = await Profile.findByPk(id)
         .then(() => Profile.update(
             {
                 profile_type,
@@ -154,17 +176,24 @@ export const updateProfile = catchAsync(async (req: Request, res: Response) => {
             {
                 where: { profile_id: id }
             }));
-    util.controllerResult(res, 200, data);
+
+    if (utils.isEmptyData(user)) {
+        utils.controllerResult(res, 400, null, "프로필을 찾을 수 없습니다.")
+    }
+    else {
+        utils.controllerResult(res, 200);
+    }
 });
 
 export const deleteProfile = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const data = await Profile.findByPk(id).then(data => { return data });
-    if (data === null) {
-        util.controllerResult(res, 400, null, "사용자를 찾을 수 없습니다.")
+    const profile = await Profile.findByPk(id).then(data => { return data });
+
+    if (utils.isEmptyData(profile)) {
+        utils.controllerResult(res, 400, null, "프로필을 찾을 수 없습니다.")
     }
     else {
-        Profile.update({ is_delete: 1 }, { where: { profile_id: id } });
-        util.controllerResult(res, 200, data);
+        Publication.update({ is_delete: 1 }, { where: { publication_id: profile.publication_id } });
+        utils.controllerResult(res, 200);
     }
 });
