@@ -1,35 +1,33 @@
 import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
-import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
-
 import { User, Profile, Human, InfoDocument, Publication } from '../models/entities/entities.index';
-import * as util from '../utils/utils.index';
+import * as utils from '../utils/utils.index';
 import { catchAsync } from '../utils/catchAsync';
-import { ProfileTypeRule, PublicationTypeRule } from '../rules/type.rule';
-import UserTypeRule from '../rules/type.rule';
+import { ProfileTypeRule, PublicationTypeRule, UserTypeRule } from '../rules/type.rule';
 import { getQueryUnitRule } from '../rules/unit.rule';
 
 async function getUserAttributes(req: Request) {
-    let { user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, user_type, profile_type, activity_name, is_delete, publication_type } = req.body;
+    let { user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, user_type, profile_type, activity_name, is_delete, publication_type, user_contribute_point } = req.body;
 
     // TODO: USING AJV pacakge
 
     return {
-        user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, user_type, profile_type, activity_name, is_delete, publication_type
+        user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, user_type, profile_type, activity_name, is_delete, publication_type, user_contribute_point
     }
 }
 
 export async function validateUser(req: Request, res: Response, next: NextFunction): Promise<T> {
     const input = await getUserAttributes(req).then(data => { return data });
-    const { user_type, profile_type, activity_name, user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, publication_type } = input;
+    const { user_type, profile_type, activity_name, user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, publication_type, user_contribute_point } = input;
 
     const schemaValidations = [
         User.schemaValidation({
             user_type,
             user_login_id,
             user_email,
-            user_password
+            user_password,
+            user_contribute_point
         }),
         Human.schemaValidation({
             gender,
@@ -48,10 +46,10 @@ export async function validateUser(req: Request, res: Response, next: NextFuncti
     schemaValidations.forEach(e => {
         if (e.error) schemaValidationResults.push(e)
     });
-    const isValid = util.isEmptyData(schemaValidationResults);
+    const isValid = utils.isEmptyData(schemaValidationResults);
 
     if (isValid === false) {
-        util.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
+        utils.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
     } else {
         return next();
     }
@@ -70,12 +68,12 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
     user_type = UserTypeRule.User;
     profile_type = ProfileTypeRule.User;
     publication_type = PublicationTypeRule.Profile;
-    if (util.isEmptyData(activity_name)) activity_name = user_login_id;
+    if (utils.isEmptyData(activity_name)) activity_name = user_login_id;
 
     const user = await User.findAll({ where: { [Op.or]: [{ user_login_id }, { user_email }] } }).then(data => { return data });
 
-    if (!util.isEmptyData(user)) {
-        util.controllerResult(res, 400, null, "아이디 또는 이메일 중복");
+    if (!utils.isEmptyData(user)) {
+        utils.controllerResult(res, 400, null, "아이디 또는 이메일 중복");
     }
     else {
         const human = Human.create({
@@ -118,7 +116,7 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
 
         Promise
             .race([human, user, publication, profile, info_document])
-            .finally(() => util.controllerResult(res, 200, {
+            .finally(() => utils.controllerResult(res, 200, {
                 user_login_id,
                 user_email,
                 birthday,
@@ -134,7 +132,7 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
 export const getUsers = catchAsync(async (req: Request, res: Response) => {
     const { page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
 
-    const data = await User.findAndCountAll(util.paginate(
+    const data = await User.findAndCountAll(utils.paginate(
         page,
         limit,
         {
@@ -143,10 +141,10 @@ export const getUsers = catchAsync(async (req: Request, res: Response) => {
         }
     )).then(data => { return data });
 
-    if (util.isEmptyData(data)) {
-        util.controllerResult(res, 400, null);
+    if (utils.isEmptyData(data)) {
+        utils.controllerResult(res, 400, null);
     } else {
-        util.controllerResult(res, 200, data);
+        utils.controllerResult(res, 200, data);
     }
 });
 
@@ -158,12 +156,12 @@ export const getUser = catchAsync(async (req: Request, res: Response) => {
         include: [Human]
     }).then(data => { return data });
 
-    if (util.isEmptyData(user)) {
-        util.controllerResult(res, 400, null)
+    if (utils.isEmptyData(user)) {
+        utils.controllerResult(res, 400, null)
     }
     else {
         const { user_type, user_login_id, user_email, user_contribute_point, is_delete, createdAt, updatedAt, human } = user;
-        util.controllerResult(res, 200, {
+        utils.controllerResult(res, 200, {
             user_type, user_login_id, user_email, user_contribute_point, is_delete, createdAt, updatedAt, human
         });
     }
@@ -171,9 +169,8 @@ export const getUser = catchAsync(async (req: Request, res: Response) => {
 
 export const updateUser = catchAsync(async (req: Request, res: Response) => {
     const input = await getUserAttributes(req).then(data => { return data });
-    const { user_email, is_delete, activity_name, profile_type } = input;
+    const { user_email, is_delete, activity_name, profile_type, user_contribute_point } = input;
     const { id } = req.params;
-    let profile;
     let isFinalCheck = false;
 
     const user = await User.findOne({
@@ -182,15 +179,15 @@ export const updateUser = catchAsync(async (req: Request, res: Response) => {
     }).then(user => { return user });
 
     // FinalCheck
-    if (util.isEmptyData(user)) {
-        util.controllerResult(res, 400, null, "유저를 찾을 수 없습니다");
+    if (utils.isEmptyData(user)) {
+        utils.controllerResult(res, 400, null, "유저를 찾을 수 없습니다");
     } else {
-        profile = await Profile.findOne({
+        const profile = await Profile.findOne({
             where: { human_id: user.human.human_id }
         });
 
-        if (util.isEmptyData(profile)) {
-            util.controllerResult(res, 400, null, "프로필을 찾을 수 없습니다");
+        if (utils.isEmptyData(profile)) {
+            utils.controllerResult(res, 400, null, "프로필을 찾을 수 없습니다");
         } else {
             isFinalCheck = true;
         }
@@ -198,16 +195,16 @@ export const updateUser = catchAsync(async (req: Request, res: Response) => {
 
     if (isFinalCheck) {
         await User.update(
-            { user_email, is_delete, },
+            { user_email, is_delete, user_contribute_point },
             { where: { user_id: id } }
         );
 
         await Profile.update(
             { activity_name, profile_type },
-            { where: user.human.human_id }
+            { where: { human_id: user.human.human_id } }
         );
 
-        util.controllerResult(res, 200);
+        utils.controllerResult(res, 200);
     }
 });
 
@@ -215,11 +212,11 @@ export const deleteUser = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
     const user = await User.findByPk(id).then(data => { return data });
 
-    if (util.isEmptyData(user)) {
-        util.controllerResult(res, 400, null)
+    if (utils.isEmptyData(user)) {
+        utils.controllerResult(res, 400, null)
     }
     else {
         await User.update({ is_delete: 1 }, { where: { user_id: id } });
-        util.controllerResult(res, 200);
+        utils.controllerResult(res, 200);
     }
 });

@@ -1,11 +1,10 @@
 import { storage, bucketName } from '../../database/gcStorage';
 import * as dateFns from 'date-fns';
 
-const bucket = storage.bucket(bucketName);
+
 
 export async function listBuckets() {
     // Lists all buckets in the current project
-
     const [buckets] = await storage.getBuckets();
     console.log('Buckets:');
     buckets.forEach(bucket => {
@@ -23,7 +22,10 @@ export async function getBucketMetadata() {
 }
 
 export async function uploadFile(filename, filenameToSave) {
-    if (filenameToSave === false) filenameToSave = "noname_" + dateFns.formatISO(new Date());
+    const bucket = storage.bucket(bucketName);
+    if (filenameToSave === false) {
+        filenameToSave = "noname_" + dateFns.formatISO(new Date());
+    }
     const file = bucket.file(filenameToSave);
     const buff = Buffer.from(filename, 'binary').toString('utf-8');
 
@@ -37,9 +39,8 @@ export async function uploadFile(filename, filenameToSave) {
         return err;
     });
     stream.on('finish', () => {
+        console.log(`Create Image : ${filenameToSave} uploaded to ${bucketName} Bucket.`);
         return filenameToSave;
     });
     stream.end(Buffer.from(buff, 'base64'));
-
-    console.log(`Create Post Image : ${filenameToSave} uploaded to ${bucketName}.`);
 }

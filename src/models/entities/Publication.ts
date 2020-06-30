@@ -40,13 +40,13 @@ Publication.init({
         field: 'publication_type'
     },
     perfection: {
-        type: DataTypes.INTEGER(3),
+        type: DataTypes.TINYINT(3),
         allowNull: false,
         defaultValue: 0,
         field: 'perfection'
     },
     perfection_state: {
-        type: DataTypes.INTEGER(1),
+        type: DataTypes.TINYINT(1),
         allowNull: false,
         defaultValue: 0,
         field: 'perfection_state'
@@ -75,12 +75,6 @@ Publication.init({
         defaultValue: false,
         field: 'is_published'
     },
-    is_temp_data: {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-        field: 'is_temp_data'
-    }
 }, {
     sequelize: connection,
     modelName: 'publication',

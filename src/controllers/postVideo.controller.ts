@@ -2,32 +2,30 @@ import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { catchAsync } from '../utils/catchAsync';
 import * as utils from '../utils/utils.index';
-import { PostTypeRule, PostVideoTypeRule } from '../rules/type.rule';
+import { PostTypeRule, PostVideoTypeRule, PublicationTypeRule } from '../rules/type.rule';
 import { Post, PostVideo, Profile, Publication, CaseElement, CaseConfiguration } from '../models/entities/entities.index';
 import { getQueryUnitRule } from '../rules/unit.rule';
 
 async function getPostVideoAttributes(req: Request) {
-    let { post_type, post_title, post_content, post_video_type, post_video_access_code, case_element_id } = req.body;
+    const { post_title, post_content, post_video_type, post_video_access_code, case_element_id, activity_name, post_type = PostTypeRule.Video, publication_type = PublicationTypeRule.PostVideo } = req.body;
 
     // TODO: USING AJV pacakge
 
     return {
-        post_type, post_title, post_content, post_video_type, post_video_access_code, case_element_id
+        post_type, post_title, post_content, post_video_type, post_video_access_code, case_element_id, publication_type, activity_name
     }
 }
 
 export async function validatePostVideo(req: Request, res: Response, next: NextFunction): Promise<T> {
     const input = await getPostVideoAttributes(req).then(data => { return data });
-    const { post_title, post_content, post_video_access_code, case_element_id, post_video_type } = input;
-    let { post_type = PostTypeRule.Video } = input;
-    let { profile } = req.body;
+    const { post_title, post_content, post_video_access_code, case_element_id, post_video_type, activity_name, post_type } = input;
 
     const schemaValidations = [
         CaseElement.schemaValidation({
             case_element_id
         }),
         Profile.schemaValidation({
-            activity_name: profile,
+            activity_name,
         }),
         Post.schemaValidation({
             post_type,
@@ -46,8 +44,6 @@ export async function validatePostVideo(req: Request, res: Response, next: NextF
     });
     const isValid = utils.isEmptyData(schemaValidationResults);
 
-    console.log("??", schemaValidationResults);
-
     if (isValid === false) {
         utils.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
     } else {
@@ -58,20 +54,21 @@ export async function validatePostVideo(req: Request, res: Response, next: NextF
 export const createPostVideo = catchAsync(async (req: Request, res: Response) => {
     const { user_id } = req.user;
     const input = await getPostVideoAttributes(req).then(data => { return data });
-    const { case_element_id, post_title, post_content, post_video_access_code, post_video_type } = input;
-    let { profile } = req.body;
+    const { case_element_id, post_title, post_content, post_video_access_code, post_video_type, publication_type, activity_name, post_type } = input;
 
     const publication_id = uuidv4();
     const post_id = uuidv4();
     const post_video_id = uuidv4();
     let isFinalCheck = false;
 
-    const profileData = await Profile.findOne({ where: { activity_name: profile } })
+    let sql;
+    if (activity_name) sql = { where: { activity_name } };
+    const profileData = await Profile.findOne(sql)
         .then(data => { return data });
 
     // Final Check
     if (utils.isEmptyData(profileData)) {
-        utils.controllerResult(res, 400, null, profile + " 프로필을 찾을 수 없습니다.");
+        utils.controllerResult(res, 400, null, "프로필을 찾을 수 없습니다.");
     }
     else {
         const caseElement = await CaseElement.findOne({ where: { case_element_id } });
@@ -99,6 +96,7 @@ export const createPostVideo = catchAsync(async (req: Request, res: Response) =>
 
         const publication = await Publication.create({
             publication_id,
+            publication_type,
             user_id
         });
 
@@ -135,7 +133,10 @@ export const getPostVideos = catchAsync(async (req: Request, res: Response) => {
         },
         order: [[sortBy, order]],
     };
-    if (utils.isEmptyData(profiles) !== false) sql.include.where = { profile_id: profiles };
+
+    if (utils.isEmptyData(profiles) !== false) {
+        sql.include.where = { profile_id: profiles };
+    }
 
     const data = await PostVideo.findAndCountAll(sql = utils.paginate(
         page,

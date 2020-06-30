@@ -10,11 +10,11 @@ import * as hpp from 'hpp';
 import * as csrf from 'csurf';
 import * as multer from 'multer';
 import * as compression from 'compression';
+import * as methodOverride from 'method-override';
 import routes from './routes/routes.index';
 import { handleError, ErrorHandler } from './utils/errorHandler';
 import { logger } from "./middlewares/logger";
 import { limiter } from './middlewares/rateLimiter';
-import * as methodOverride from 'method-override';
 
 class App {
     public app: express.Application;

@@ -6,6 +6,7 @@ import * as utils from '../utils/utils.index';
 import { Profile, InfoDocument, Publication, Human } from '../models/entities/entities.index';
 import { ProfileTypeRule, PublicationTypeRule } from '../rules/type.rule';
 import { getQueryUnitRule } from '../rules/unit.rule';
+import { logStorage } from '../database/logStorage';
 
 async function getProfileAttributes(req: Request) {
     let { profile_type, gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description } = req.body;
@@ -63,7 +64,7 @@ export const createProfile = catchAsync(async (req: Request, res: Response) => {
     const profile_id = uuidv4();
     const publication_id = uuidv4();
 
-    const profile = await Profile.findAll({
+    const profiles = await Profile.findAll({
         include: [{
             model: Human,
             attributes: ['birthday'],
@@ -72,7 +73,7 @@ export const createProfile = catchAsync(async (req: Request, res: Response) => {
         where: { activity_name }
     }).then(data => { return data });
 
-    if (!utils.isEmptyData(profile)) {
+    if (!utils.isEmptyData(profiles)) {
         utils.controllerResult(res, 400, null, "동일인물이 이미 존재합니다.");
     }
     else {
@@ -123,14 +124,17 @@ export const createProfile = catchAsync(async (req: Request, res: Response) => {
 
 export const getProfiles = catchAsync(async (req: Request, res: Response) => {
     const { page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
-    let { profiles } = req.query;
+    const { profiles } = req.query;
+
     let sql = {
-        include: [Publication],
+        include: [Human, Publication],
         order: [[sortBy, order]]
     };
-    if (utils.isEmptyData(profiles) === false) {
-        sql.include.where = { activity_name: profiles };
+
+    if (!utils.isEmptyData(profiles)) {
+        sql.where = { activity_name: profiles };
     }
+
     const data = await Profile.findAndCountAll(utils.paginate(
         page,
         limit,
@@ -149,7 +153,7 @@ export const getProfile = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = await Profile.findOne({
         where: { profile_id: id },
-        include: [Publication]
+        include: [Human, Publication]
     }).then(data => { return data });
 
     if (data === null) {

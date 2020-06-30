@@ -2,8 +2,8 @@ import app from './app';
 import './database/dbConnect';
 import * as Sentry from '@sentry/node';
 import { RewriteFrames } from '@sentry/integrations';
-import * as util from './utils/utils.index';
-
+import * as utils from './utils/utils.index';
+import { logStorage } from './database/logStorage';
 // declare global {
 //     namespace NodeJS {
 //         interface Global {
@@ -21,6 +21,7 @@ import * as util from './utils/utils.index';
 
 // global.__rootdir__ = __dirname || process.cwd();
 
+
 let SERVER_PORT;
 if (process.env.NODE_ENV === 'development') {
     SERVER_PORT = process.env.DEV_DB_SERVER_PORT
@@ -29,6 +30,9 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 app.listen(SERVER_PORT, () => {
+    if (process.env.NODE_ENV === 'development') {
+        utils.myIpInformation();
+        logStorage;
+    }
     console.info(`Server running... Port ${SERVER_PORT} Mode ${process.env.NODE_ENV}`);
-    if (process.env.NODE_ENV === 'development') util.myIpInformation();
 });

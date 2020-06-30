@@ -1,12 +1,14 @@
 import { Storage } from '@google-cloud/storage';
-import * as path from 'path';
+import { GoogleServiceAccountKey } from '../apis/googleapis';
+import { ENVIRONMENT_VARIABLES_SETTING } from '../configs/config';
 
-const serviceKey = path.join(__dirname, '../../auth/symbol-project-ba5b07dbb2c8.json');
-export const bucketName = 'symbolproject';
+ENVIRONMENT_VARIABLES_SETTING();
+
+export const bucketName = process.env.GOOGLE_STORAGE_BUCKET;
 
 export const storage = new Storage({
-    keyFilename: serviceKey,
-    projectId: 'symbol-project'
+    keyFilename: GoogleServiceAccountKey,
+    projectId: process.env.GOOGLE_PROJECT_ID
 });
 
 export default storage;

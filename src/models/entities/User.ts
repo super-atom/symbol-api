@@ -27,6 +27,7 @@ export class User extends Model {
             user_login_id: Joi.string().min(3).max(10),
             user_password: Joi.string().min(8).max(20),
             user_email: Joi.string().email().max(20),
+            user_contribute_point: Joi.number(),
         }).options({ abortEarly: false });
 
         return schema.validate(data);

@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 import { catchAsync } from '../utils/catchAsync';
-import * as util from '../utils/utils.index';
+import * as utils from '../utils/utils.index';
 import { Human, Profile, CaseElement, Publication, CaseConfiguration } from '../models/entities/entities.index';
 import { getQueryUnitRule } from '../rules/unit.rule';
 import { PublicationTypeRule } from '../rules/type.rule';
@@ -52,10 +52,10 @@ export async function validateCaseElement(req: Request, res: Response, next: Nex
         if (e.error) schemaValidationResults.push(e.error)
     });
 
-    const isValid = util.isEmptyData(schemaValidationResults);
+    const isValid = utils.isEmptyData(schemaValidationResults);
 
     if (isValid === false) {
-        util.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
+        utils.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
     }
     else {
         const profilesData = await Profile.findAll({ where: { activity_name: profiles } })
@@ -63,13 +63,13 @@ export async function validateCaseElement(req: Request, res: Response, next: Nex
 
         let notExistProfiles: Array<string> = [];
         profiles.forEach((data, index) => {
-            if (util.isEmptyData(profilesData[index])) {
+            if (utils.isEmptyData(profilesData[index])) {
                 notExistProfiles.push(data);
             }
         });
 
-        if (util.isEmptyData(notExistProfiles) === false) {
-            util.controllerResult(res, 400, null, notExistProfiles + " 프로필을 찾을 수 없습니다.");
+        if (utils.isEmptyData(notExistProfiles) === false) {
+            utils.controllerResult(res, 400, null, notExistProfiles + " 프로필을 찾을 수 없습니다.");
         } else {
             return next();
         }
@@ -82,7 +82,6 @@ export const createCaseElement = catchAsync(async (req: Request, res: Response) 
     const { profiles, case_element_name, case_element_description, case_element_occurred_date, publication_type } = input;
     const publication_id = uuidv4();
     const case_element_id = uuidv4();
-    console.log("?", publication_type);
 
     const caseElement = await CaseElement.findAll({
         where: {
@@ -93,8 +92,8 @@ export const createCaseElement = catchAsync(async (req: Request, res: Response) 
         }
     }).then(data => { return data });
 
-    if (util.isEmptyData(caseElement) === false) {
-        util.controllerResult(res, 400, null, "사건 중복");
+    if (utils.isEmptyData(caseElement) === false) {
+        utils.controllerResult(res, 400, null, "사건 중복");
     } else {
         const publication = await Publication.create({
             publication_type,
@@ -110,10 +109,12 @@ export const createCaseElement = catchAsync(async (req: Request, res: Response) 
             case_element_occurred_date
         });
 
-        const profilesData = await Profile.findAll({ where: { activity_name: profiles } })
+        const profilesData = await Profile
+            .findAll({ where: { activity_name: profiles } })
             .then(data => { return data });
 
-        Promise.race([publication, case_element])
+        Promise
+            .race([publication, case_element])
             .then(() => profiles.forEach((data, index) => {
                 CaseConfiguration.create({
                     case_configuration_id: uuidv4(),
@@ -121,7 +122,7 @@ export const createCaseElement = catchAsync(async (req: Request, res: Response) 
                     case_element_id
                 })
             }))
-            .finally(() => util.controllerResult(res, 200, {
+            .finally(() => utils.controllerResult(res, 200, {
                 case_element_name,
                 case_element_description,
                 case_element_occurred_date
@@ -132,15 +133,15 @@ export const createCaseElement = catchAsync(async (req: Request, res: Response) 
 export const getCaseElements = catchAsync(async (req: Request, res: Response) => {
     const { profile, page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
 
-    const profileData = await Profile.findAll({
-        where: { 'profile_id': profile }
-    });
+    let sql;
+    if (profile) sql = { where: { 'profile_id': profile } }
+    const profileData = await Profile.findAll(sql);
 
-    if (util.isEmptyData(profileData)) {
-        util.controllerResult(res, 400, null, "프로필이 존재하지 않습니다.");
+    if (utils.isEmptyData(profileData)) {
+        utils.controllerResult(res, 400, null, "프로필이 존재하지 않습니다.");
     } else {
         const data = await CaseElement.findAndCountAll(
-            util.paginate(
+            utils.paginate(
                 page,
                 limit,
                 {
@@ -150,10 +151,10 @@ export const getCaseElements = catchAsync(async (req: Request, res: Response) =>
             )
         ).then(data => { return data });
 
-        if (util.isEmptyData(data)) {
-            util.controllerResult(res, 400, data);
+        if (utils.isEmptyData(data)) {
+            utils.controllerResult(res, 400);
         } else {
-            util.controllerResult(res, 200, data);
+            utils.controllerResult(res, 200, data);
         }
     }
 });
@@ -162,9 +163,9 @@ export const getCaseElement = catchAsync(async (req: Request, res: Response) => 
 });
 
 export const updateCaseElement = catchAsync(async (req: Request, res: Response) => {
-    util.controllerResult(res, 200);
+    utils.controllerResult(res, 200);
 });
 
 export const deleteCaseElement = catchAsync(async (req: Request, res: Response) => {
-    util.controllerResult(res);
+    utils.controllerResult(res);
 });

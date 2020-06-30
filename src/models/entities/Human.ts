@@ -33,7 +33,7 @@ Human.init({
         field: 'gender'
     },
     birthday: {
-        type: DataTypes.DATE(),
+        type: DataTypes.DATEONLY,
         field: 'birthday'
     },
     real_name: {

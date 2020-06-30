@@ -8,3 +8,4 @@ export * from './operationUtility';
 export * from './pagenate';
 export * from './downloadFile';
 export * from './network';
+export * from './logScript';

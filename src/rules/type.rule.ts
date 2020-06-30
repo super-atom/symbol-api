@@ -47,4 +47,9 @@ export enum PostImageTypeRule {
     Edited = 5
 }
 
+export enum ResourceTypeRule {
+    Untyped = 0,
+    Image = 1,
+}
+
 export default UserTypeRule;
