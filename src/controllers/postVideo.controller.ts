@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+import { Op } from 'sequelize';
 import { catchAsync } from '../utils/catchAsync';
 import * as utils from '../utils/utils.index';
-import { PostTypeRule, PostVideoTypeRule, PublicationTypeRule } from '../rules/type.rule';
+import { PostTypeRule, PublicationTypeRule, getQueryUnitRule } from '../rules/type.rule';
 import { Post, PostVideo, Profile, Publication, CaseElement, CaseConfiguration } from '../models/entities/entities.index';
-import { getQueryUnitRule } from '../rules/unit.rule';
 
-async function getPostVideoAttributes(req: Request) {
+async function getPostVideoAttributes(req: Request): Promise<object> {
     const { post_title, post_content, post_video_type, post_video_access_code, case_element_id, activity_name, post_type = PostTypeRule.Video, publication_type = PublicationTypeRule.PostVideo } = req.body;
 
     // TODO: USING AJV pacakge
@@ -16,7 +16,7 @@ async function getPostVideoAttributes(req: Request) {
     }
 }
 
-export async function validatePostVideo(req: Request, res: Response, next: NextFunction): Promise<T> {
+export async function validatePostVideo(req: Request, res: Response, next: NextFunction): Promise<NextFunction> {
     const input = await getPostVideoAttributes(req).then(data => { return data });
     const { post_title, post_content, post_video_access_code, case_element_id, post_video_type, activity_name, post_type } = input;
 
@@ -71,7 +71,7 @@ export const createPostVideo = catchAsync(async (req: Request, res: Response) =>
         utils.controllerResult(res, 400, null, "프로필을 찾을 수 없습니다.");
     }
     else {
-        const caseElement = await CaseElement.findOne({ where: { case_element_id } });
+        const caseElement = await CaseElement.findOne({ where: { [Op]: [case_element_id] } });
         const isExistCaseElement = caseElement === null ? false : true;
 
         if (isExistCaseElement === false) {
@@ -118,7 +118,7 @@ export const createPostVideo = catchAsync(async (req: Request, res: Response) =>
             post_video_access_code,
         });
 
-        Promise.race([publication, post, postVideo])
+        Promise.all([publication, post, postVideo])
             .finally(() => utils.controllerResult(res, 200));
     }
 });

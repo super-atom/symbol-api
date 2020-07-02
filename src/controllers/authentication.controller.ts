@@ -1,11 +1,10 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import * as Joi from '@hapi/joi';
 import * as utils from '../utils/utils.index';
 import { catchAsync } from '../utils/catchAsync';
-import { ErrorHandler } from '../utils/errorHandler';
 import { User } from '../models/entities/User';
 
-export const loginUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const loginUser = catchAsync(async (req: Request, res: Response) => {
     const { user_login_id, user_password } = req.body;
 
     const schema = Joi.object({

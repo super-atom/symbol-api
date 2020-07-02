@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { catchAsync } from '../utils/catchAsync';
 import * as utils from '../utils/utils.index';
@@ -17,7 +17,7 @@ async function getPostImageAttributes(req: Request): Promise<object> {
     }
 }
 
-export async function validatePostImage(req: Request, res: Response, next: NextFunction): Promise<T> {
+export async function validatePostImage(req: Request, res: Response, next: NextFunction): Promise<NextFunction> {
     const input = await getPostImageAttributes(req).then(data => { return data });
     const { case_element_id, post_type, activity_name, post_title, post_content, post_image_type, is_exist_thumbnails, publication_type } = input;
 
@@ -133,7 +133,7 @@ export const createPostImage = catchAsync(async (req: Request, res: Response) =>
         });
 
         const result = await Promise
-            .race([publication, post, postImage])
+            .all([publication, post, postImage])
             .then(data => { return data });
 
         if (!result) {

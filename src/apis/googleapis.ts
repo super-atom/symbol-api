@@ -1,11 +1,9 @@
 import { google } from 'googleapis';
 import * as path from 'path';
 import { ENVIRONMENT_VARIABLES_SETTING } from '../configs/config';
-import { getSheetList } from '../utils/gcp/spreadsheet';
 
 ENVIRONMENT_VARIABLES_SETTING();
-
-export const GoogleServiceAccountKey = path.resolve(__dirname, process.env.GOOGLE_APPLICATION_CREDENTIALS) + ".json";
+export const GoogleServiceAccountKey = path.resolve(__dirname, process.env.GOOGLE_SERVICE_ACCESS_KEYFILE) + ".json";
 
 // generate a url that asks permissions for google service scopes
 const scopes = [

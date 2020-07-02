@@ -8,8 +8,8 @@ import { ProfileTypeRule, PublicationTypeRule } from '../rules/type.rule';
 import { getQueryUnitRule } from '../rules/unit.rule';
 import { logStorage } from '../database/logStorage';
 
-async function getProfileAttributes(req: Request) {
-    let { profile_type, gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description } = req.body;
+async function getProfileAttributes(req: Request): Promise<object> {
+    const { profile_type, gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description } = req.body;
 
     // TODO: USING AJV pacakge
 
@@ -18,7 +18,7 @@ async function getProfileAttributes(req: Request) {
     }
 }
 
-export async function validateProfile(req: Request, res: Response, next: NextFunction): Promise<T> {
+export async function validateProfile(req: Request, res: Response, next: NextFunction): Promise<NextFunction> {
     const input = await getProfileAttributes(req).then(data => { return data });
     const { gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description, profile_type, activity_name } = input;
 
@@ -109,7 +109,7 @@ export const createProfile = catchAsync(async (req: Request, res: Response) => {
         });
 
         Promise
-            .race([human, publication, profile, info_document])
+            .all([human, publication, profile, info_document])
             .finally(() => utils.controllerResult(res, 200, {
                 activity_name,
                 birthday,

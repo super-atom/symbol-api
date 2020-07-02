@@ -1,3 +1,3 @@
-import * as utils from '../utils/utils.index';
+import { LogScript } from '../class/logScript';
 
-export const logStorage = utils.LogScript.getInstance();
+export const logStorage = LogScript.getInstance();

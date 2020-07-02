@@ -7,8 +7,8 @@ import { catchAsync } from '../utils/catchAsync';
 import { ProfileTypeRule, PublicationTypeRule, UserTypeRule } from '../rules/type.rule';
 import { getQueryUnitRule } from '../rules/unit.rule';
 
-async function getUserAttributes(req: Request) {
-    let { user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, user_type, profile_type, activity_name, is_delete, publication_type, user_contribute_point } = req.body;
+async function getUserAttributes(req: Request): Promise<object> {
+    const { user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, user_type, profile_type, activity_name, is_delete, publication_type, user_contribute_point } = req.body;
 
     // TODO: USING AJV pacakge
 
@@ -17,7 +17,7 @@ async function getUserAttributes(req: Request) {
     }
 }
 
-export async function validateUser(req: Request, res: Response, next: NextFunction): Promise<T> {
+export async function validateUser(req: Request, res: Response, next: NextFunction): Promise<NextFunction> {
     const input = await getUserAttributes(req).then(data => { return data });
     const { user_type, profile_type, activity_name, user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, publication_type, user_contribute_point } = input;
 
@@ -76,7 +76,7 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
         utils.controllerResult(res, 400, null, "아이디 또는 이메일 중복");
     }
     else {
-        const human = Human.create({
+        const human = await Human.create({
             human_id,
             gender,
             birthday,
@@ -87,7 +87,7 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
             current_live_city,
         })
 
-        const user = User.create({
+        const user = await User.create({
             user_id,
             human_id,
             user_type,
@@ -96,13 +96,13 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
             user_password: User.encryptPassword(user_password),
         })
 
-        const publication = Publication.create({
+        const publication = await Publication.create({
             publication_id,
             publication_type,
             user_id
         })
 
-        const profile = Profile.create({
+        const profile = await Profile.create({
             profile_id,
             human_id,
             publication_id,
@@ -110,22 +110,13 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
             profile_type
         });
 
-        const info_document = InfoDocument.create({
+        const info_document = await InfoDocument.create({
             profile_id
         });
 
         Promise
-            .race([human, user, publication, profile, info_document])
-            .finally(() => utils.controllerResult(res, 200, {
-                user_login_id,
-                user_email,
-                birthday,
-                real_name,
-                birth_country,
-                birth_city,
-                activity_country,
-                current_live_city
-            }));
+            .all([human, user, publication, profile, info_document])
+            .finally(() => utils.controllerResult(res, 200));
     }
 });
 
