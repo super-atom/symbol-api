@@ -1,6 +1,9 @@
 module.exports = {
+    plugins: ['@typescript-eslint/eslint-plugin', 'eslint-plugin-tsdoc'],
     parser: '@typescript-eslint/parser', // Specifies the ESLint parser
     parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: __dirname,
         ecmaVersion: 2020, // Allows for the parsing of modern ECMAScript features
         sourceType: 'module', // Allows for the use of imports
     },

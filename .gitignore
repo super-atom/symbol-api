@@ -21,6 +21,10 @@ dist/
 .idea/
 *.swp
 .awcache
+.vscode/
 
-dbConfig.ts
-src/database/config.json
+# Directory
+/auth/
+/externals/
+/docs/
+/src/static/

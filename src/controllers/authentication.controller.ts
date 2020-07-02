@@ -1,28 +1,41 @@
-import { Request, Response, NextFunction } from 'express';
-import * as sequelize from 'sequelize';
-import * as bcrypt from 'bcrypt';
+import { Request, Response } from 'express';
+import * as Joi from '@hapi/joi';
+import * as utils from '../utils/utils.index';
 import { catchAsync } from '../utils/catchAsync';
-import * as util from '../utils/index';
-import { User } from '../models/entity/User';
-import { ErrorHandler } from '../utils/errorHandler';
-import * as jwt from 'jsonwebtoken';
+import { User } from '../models/entities/User';
 
-export const loginUser = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+export const loginUser = catchAsync(async (req: Request, res: Response) => {
     const { user_login_id, user_password } = req.body;
-    if (!user_login_id || !user_password) {
-        return next(new ErrorHandler(400, '아이디와 비밀번호를 입력해주세요.'));
-    }
-    User.findAll({ where: { user_login_id } }).then(data => {
-        let buff = data[0].user_password;
-        const check = User.isValidPassword(user_password, buff.toString());
-        if (!buff) new ErrorHandler(400, "유저가 존재하지 않습니다!");
-        if (!check) new ErrorHandler(400, "비밀번호가 일치하지 않습니다!");
-        else sendToken(data[0], 200, res);
-    });
-});
 
-function sendToken(user, statusCode, res): any {
-    const token = user.getSignedToken(user.user_id);
-    // res.cookie("user", token);
-    res.json({ message: "success", token });
-}
+    const schema = Joi.object({
+        user_login_id: Joi.string().required().min(3).max(10),
+        user_password: Joi.string().required(),
+    }).options({ abortEarly: false });
+
+    const schemaValidationResult = schema.validate({
+        user_login_id,
+        user_password
+    });
+
+    const isValid = schemaValidationResult.error ? false : true;
+
+    if (!isValid) {
+        utils.controllerResult(res, 400, schemaValidationResult.error, "유효성 검증 불통과");
+    } else {
+        const user = await User.findOne({ where: { user_login_id } }).then(data => { return data });
+
+        if (user === null) {
+            utils.controllerResult(res, 400, null, user_login_id + " 사용자가 존재하지 않습니다.");
+        } else {
+            const buff = user.user_password;
+            const check = User.isValidPassword(user_password, buff.toString());
+            if (!check) {
+                utils.controllerResult(res, 400, null, "비밀번호가 일치하지 않습니다.");
+            }
+            else {
+                const token = User.getSignedToken(user.user_id);
+                utils.controllerResult(res, 200, token);
+            }
+        }
+    }
+});
