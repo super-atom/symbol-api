@@ -6,7 +6,7 @@ import { Human } from './Human';
 import { Publication } from './Publication';
 
 export class Profile extends Model {
-    static schemaValidation(data: object): object {
+    static schemaValidation(data: object): any {
         const schema = Joi.object({
             profile_id: Joi.string().guid({ version: 'uuidv4' }),
             activity_name: Joi.string().max(50),

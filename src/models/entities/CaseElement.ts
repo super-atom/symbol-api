@@ -5,7 +5,7 @@ import { connection } from '../../database/dbConnect';
 import { Publication } from './Publication';
 
 export class CaseElement extends Model {
-    static schemaValidation(data: object): object {
+    static schemaValidation(data: object): any {
         const schema = Joi.object({
             case_element_id: Joi.string().guid({ version: 'uuidv4' }),
             case_element_name: Joi.string(),

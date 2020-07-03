@@ -5,7 +5,7 @@ import { connection } from '../../database/dbConnect';
 import { User } from './User';
 
 export class Publication extends Model {
-    static schemaValidation(data: object): object {
+    static schemaValidation(data: object): any {
         const schema = Joi.object({
             publication_id: Joi.string().guid({ version: 'uuidv4' }),
             publication_type: Joi.number().min(1).max(4),
@@ -74,6 +74,12 @@ Publication.init({
         allowNull: false,
         defaultValue: false,
         field: 'is_published'
+    },
+    is_temp_data: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+        field: 'is_temp_data'
     },
 }, {
     sequelize: connection,

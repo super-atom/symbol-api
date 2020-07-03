@@ -1,23 +1,34 @@
-import { Request, Response, NextFunction } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 import { catchAsync } from '../utils/catchAsync';
 import * as utils from '../utils/utils.index';
-import { PostTypeRule, PublicationTypeRule, getQueryUnitRule } from '../rules/type.rule';
+import { Request, Response, NextFunction, AsyncReturnType } from './../types/types.index';
+import { PostTypeRule, PublicationTypeRule, getQueryUnitRule } from '../rules/rules.index';
 import { Post, PostVideo, Profile, Publication, CaseElement, CaseConfiguration } from '../models/entities/entities.index';
 
 async function getPostVideoAttributes(req: Request): Promise<object> {
-    const { post_title, post_content, post_video_type, post_video_access_code, case_element_id, activity_name, post_type = PostTypeRule.Video, publication_type = PublicationTypeRule.PostVideo } = req.body;
+    const {
+        post_title,
+        post_content,
+        post_video_type,
+        post_video_access_code,
+        case_element_id,
+        activity_name,
+        post_type = PostTypeRule.Video,
+        publication_type = PublicationTypeRule.PostVideo
+    } = req.body;
+
+    const { profile } = req.query;
 
     // TODO: USING AJV pacakge
 
     return {
-        post_type, post_title, post_content, post_video_type, post_video_access_code, case_element_id, publication_type, activity_name
+        post_type, post_title, post_content, post_video_type, post_video_access_code, case_element_id, publication_type, activity_name, profile
     }
 }
 
-export async function validatePostVideo(req: Request, res: Response, next: NextFunction): Promise<NextFunction> {
-    const input = await getPostVideoAttributes(req).then(data => { return data });
+export async function validatePostVideo(req: Request, res: Response, next: NextFunction): Promise<NextFunction | void> {
+    const input: AsyncReturnType<any> = await getPostVideoAttributes(req).then(data => { return data });
     const { post_title, post_content, post_video_access_code, case_element_id, post_video_type, activity_name, post_type } = input;
 
     const schemaValidations = [
@@ -38,10 +49,11 @@ export async function validatePostVideo(req: Request, res: Response, next: NextF
         })
     ];
 
-    let schemaValidationResults = [];
+    const schemaValidationResults: [] = [];
     schemaValidations.forEach(e => {
         if (e.error) schemaValidationResults.push(e.error)
     });
+
     const isValid = utils.isEmptyData(schemaValidationResults);
 
     if (isValid === false) {
@@ -53,7 +65,7 @@ export async function validatePostVideo(req: Request, res: Response, next: NextF
 
 export const createPostVideo = catchAsync(async (req: Request, res: Response) => {
     const { user_id } = req.user;
-    const input = await getPostVideoAttributes(req).then(data => { return data });
+    const input: AsyncReturnType<any> = await getPostVideoAttributes(req).then(data => { return data });
     const { case_element_id, post_title, post_content, post_video_access_code, post_video_type, publication_type, activity_name, post_type } = input;
 
     const publication_id = uuidv4();
@@ -63,7 +75,7 @@ export const createPostVideo = catchAsync(async (req: Request, res: Response) =>
 
     let sql;
     if (activity_name) sql = { where: { activity_name } };
-    const profileData = await Profile.findOne(sql)
+    const profileData: AsyncReturnType<any> = await Profile.findOne(sql)
         .then(data => { return data });
 
     // Final Check
@@ -71,13 +83,13 @@ export const createPostVideo = catchAsync(async (req: Request, res: Response) =>
         utils.controllerResult(res, 400, null, "프로필을 찾을 수 없습니다.");
     }
     else {
-        const caseElement = await CaseElement.findOne({ where: { [Op]: [case_element_id] } });
+        const caseElement: AsyncReturnType<any> = await CaseElement.findOne({ where: { case_element_id } });
         const isExistCaseElement = caseElement === null ? false : true;
 
         if (isExistCaseElement === false) {
             utils.controllerResult(res, 400, null, "해당 케이스를 찾을 수 없습니다.")
         } else {
-            const caseConf = await CaseConfiguration.findOne({
+            const caseConf: AsyncReturnType<any> = await CaseConfiguration.findOne({
                 where: { case_element_id }
             });
             const isEquelCaseConfAndProfile = (caseConf.profile_id === profileData.profile_id);
@@ -94,13 +106,13 @@ export const createPostVideo = catchAsync(async (req: Request, res: Response) =>
     if (isFinalCheck) {
         const profile_id = profileData.profile_id;
 
-        const publication = await Publication.create({
+        const publication: AsyncReturnType<any> = await Publication.create({
             publication_id,
             publication_type,
             user_id
         });
 
-        const post = await Post.create({
+        const post: AsyncReturnType<any> = await Post.create({
             publication_id,
             profile_id,
             case_element_id,
@@ -111,7 +123,7 @@ export const createPostVideo = catchAsync(async (req: Request, res: Response) =>
             post_content
         });
 
-        const postVideo = await PostVideo.create({
+        const postVideo: AsyncReturnType<any> = await PostVideo.create({
             post_id,
             post_video_id,
             post_video_type,
@@ -125,7 +137,7 @@ export const createPostVideo = catchAsync(async (req: Request, res: Response) =>
 
 export const getPostVideos = catchAsync(async (req: Request, res: Response) => {
     const { page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
-    let { profiles } = req.query;
+    const { profiles } = req.query;
 
     let sql = {
         include: {
@@ -135,10 +147,10 @@ export const getPostVideos = catchAsync(async (req: Request, res: Response) => {
     };
 
     if (utils.isEmptyData(profiles) !== false) {
-        sql.include.where = { profile_id: profiles };
+        sql.include.where = { activity_name: profiles };
     }
 
-    const data = await PostVideo.findAndCountAll(sql = utils.paginate(
+    const data: AsyncReturnType<any> = await PostVideo.findAndCountAll(sql = utils.paginate(
         page,
         limit,
         sql
@@ -147,18 +159,30 @@ export const getPostVideos = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const getPostVideo = catchAsync(async (req: Request, res: Response) => {
+    const { page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
     const { id } = req.params;
-    await Post.findByPk(id)
-        .then(data => { return data })
-        .finally((data) => utils.controllerResult(res, 200, data));
-    ;
+    const data: AsyncReturnType<any> = await Post.findAndCountAll({
+        where: {
+            [Op.and]: [
+                { profile_id: id },
+                { post_type: PostTypeRule.Video }
+            ]
+        }
+    }).then(data => { return data });
+
+
+    if (utils.isEmptyData(data)) {
+        utils.controllerResult(res, 400, null, "해당 프로필의 포스트를 찾을 수 없습니다.");
+    } else {
+        utils.controllerResult(res, 200, data);
+    }
 });
 
 export const updatePostVideo = catchAsync(async (req: Request, res: Response) => {
     const { post_title, post_content } = req.body;
     const { id } = req.params;
 
-    const data = await Post.findByPk(id)
+    const data: AsyncReturnType<any> = await Post.findByPk(id)
         .then(() => Post.update(
             {
                 post_title,
@@ -179,7 +203,7 @@ export const updatePostVideo = catchAsync(async (req: Request, res: Response) =>
 export const deletePostVideo = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
 
-    const publication = await Post.findByPk(id)
+    const publication: AsyncReturnType<any> = await Post.findByPk(id)
         .then(data => { return data });
 
     if (publication === null) {
@@ -187,7 +211,7 @@ export const deletePostVideo = catchAsync(async (req: Request, res: Response) =>
     }
     else {
         const publication_id = publication.publication_id;
-        const data = await Publication.update(
+        const data: AsyncReturnType<any> = await Publication.update(
             { is_delete: 1 },
             { where: { publication_id } }
         );

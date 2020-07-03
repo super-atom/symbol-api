@@ -1,25 +1,37 @@
-import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 import { catchAsync } from '../utils/catchAsync';
 import * as utils from '../utils/utils.index';
 import { Profile, InfoDocument, Publication, Human } from '../models/entities/entities.index';
-import { ProfileTypeRule, PublicationTypeRule } from '../rules/type.rule';
-import { getQueryUnitRule } from '../rules/unit.rule';
+import { ProfileTypeRule, PublicationTypeRule, getQueryUnitRule } from '../rules/rules.index';
+import { Request, Response, NextFunction, AsyncReturnType } from './../types/types.index';
 import { logStorage } from '../database/logStorage';
 
 async function getProfileAttributes(req: Request): Promise<object> {
-    const { profile_type, gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description } = req.body;
+    const {
+        profile_type,
+        gender,
+        birthday,
+        activity_name,
+        real_name,
+        birth_country,
+        birth_city,
+        activity_country,
+        current_live_city,
+        native_activity_name,
+        profile_description,
+        publication_type = PublicationTypeRule.Profile
+    } = req.body;
 
     // TODO: USING AJV pacakge
 
     return {
-        profile_type, gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description
+        profile_type, gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description, publication_type
     }
 }
 
-export async function validateProfile(req: Request, res: Response, next: NextFunction): Promise<NextFunction> {
-    const input = await getProfileAttributes(req).then(data => { return data });
+export async function validateProfile(req: Request, res: Response, next: NextFunction): Promise<NextFunction | void> {
+    const input: AsyncReturnType<any> = await getProfileAttributes(req).then(data => { return data });
     const { gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description, profile_type, activity_name } = input;
 
     const schemaValidations = [
@@ -40,7 +52,7 @@ export async function validateProfile(req: Request, res: Response, next: NextFun
         })
     ];
 
-    let schemaValidationResults: object = [];
+    const schemaValidationResults: Array<any | never> = [];
     schemaValidations.forEach(e => {
         if (e.error) schemaValidationResults.push(e.error)
     });
@@ -55,16 +67,14 @@ export async function validateProfile(req: Request, res: Response, next: NextFun
 
 export const createProfile = catchAsync(async (req: Request, res: Response) => {
     const { user_id } = req.user;
-    const input = await getProfileAttributes(req).then(data => { return data });
-    const { gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description } = input;
-    const profile_type = ProfileTypeRule.User;
-    const publication_type = PublicationTypeRule.Profile;
+    const input: any = await getProfileAttributes(req).then(data => { return data });
+    const { gender, birthday, activity_name, real_name, birth_country, birth_city, activity_country, current_live_city, native_activity_name, profile_description, publication_type, profile_type = ProfileTypeRule.User } = input;
 
     const human_id = uuidv4();
     const profile_id = uuidv4();
     const publication_id = uuidv4();
 
-    const profiles = await Profile.findAll({
+    const profiles: AsyncReturnType<any> = await Profile.findAll({
         include: [{
             model: Human,
             attributes: ['birthday'],
@@ -77,7 +87,7 @@ export const createProfile = catchAsync(async (req: Request, res: Response) => {
         utils.controllerResult(res, 400, null, "동일인물이 이미 존재합니다.");
     }
     else {
-        const human = await Human.create({
+        const human: AsyncReturnType<any> = await Human.create({
             human_id,
             gender,
             birthday,
@@ -88,13 +98,13 @@ export const createProfile = catchAsync(async (req: Request, res: Response) => {
             current_live_city,
         });
 
-        const publication = await Publication.create({
+        const publication: AsyncReturnType<any> = await Publication.create({
             publication_id,
             publication_type,
             user_id
         });
 
-        const profile = await Profile.create({
+        const profile: AsyncReturnType<any> = await Profile.create({
             profile_id,
             human_id,
             publication_id,
@@ -104,7 +114,7 @@ export const createProfile = catchAsync(async (req: Request, res: Response) => {
             profile_description
         });
 
-        const info_document = await InfoDocument.create({
+        const info_document: AsyncReturnType<any> = await InfoDocument.create({
             profile_id
         });
 
@@ -126,7 +136,7 @@ export const getProfiles = catchAsync(async (req: Request, res: Response) => {
     const { page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
     const { profiles } = req.query;
 
-    let sql = {
+    const sql = {
         include: [Human, Publication],
         order: [[sortBy, order]]
     };
@@ -135,7 +145,7 @@ export const getProfiles = catchAsync(async (req: Request, res: Response) => {
         sql.where = { activity_name: profiles };
     }
 
-    const data = await Profile.findAndCountAll(utils.paginate(
+    const data: AsyncReturnType<any> = await Profile.findAndCountAll(utils.paginate(
         page,
         limit,
         sql
@@ -151,7 +161,7 @@ export const getProfiles = catchAsync(async (req: Request, res: Response) => {
 
 export const getProfile = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const data = await Profile.findOne({
+    const data: AsyncReturnType<any> = await Profile.findOne({
         where: { profile_id: id },
         include: [Human, Publication]
     }).then(data => { return data });
@@ -166,10 +176,10 @@ export const getProfile = catchAsync(async (req: Request, res: Response) => {
 
 export const updateProfile = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const input = await getProfileAttributes(req).then(data => { return data });
+    const input: AsyncReturnType<any> = await getProfileAttributes(req).then(data => { return data });
     const { profile_type, profile_description, activity_name, native_activity_name } = input;
 
-    const user = await Profile.findByPk(id)
+    const user: AsyncReturnType<any> = await Profile.findByPk(id)
         .then(() => Profile.update(
             {
                 profile_type,
@@ -191,7 +201,7 @@ export const updateProfile = catchAsync(async (req: Request, res: Response) => {
 
 export const deleteProfile = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const profile = await Profile.findByPk(id).then(data => { return data });
+    const profile: AsyncReturnType<any> = await Profile.findByPk(id).then(data => { return data });
 
     if (utils.isEmptyData(profile)) {
         utils.controllerResult(res, 400, null, "프로필을 찾을 수 없습니다.")

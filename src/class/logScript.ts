@@ -4,10 +4,14 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as mkdirp from 'mkdirp';
 import * as chalk from 'chalk';
+import * as utils from '../utils/utils.index';
+
+type logScriptTuple = [string, string, string];
+type logScripts = [logScriptTuple];
 
 export class LogScript {
     public static instance: LogScript;
-    private logScripts: [[string, string, string]];
+    private logScripts: logScripts = [['', '', '']];
     private path = path.resolve(path.join('src/static/logScripts/'));
     private backupPath = path.resolve(path.join(this.path, '/backup/'));
     private filename_prefix = "logScript";
@@ -15,6 +19,11 @@ export class LogScript {
     private filename_postfix = "_" + dateFns.format(new Date(), 'yyMMdd') + '.json';
     private filename = path.resolve(path.join(this.path, "/", this.filename_prefix + this.filename_postfix));
     private backupFilename = path.resolve(path.join(this.backupPath, "/", this.backupFilename_prefix + "_" + this.filename_prefix + this.filename_postfix));
+    private logScriptSupportedLanguages = {
+        EN: 1,
+        KR: 2
+    }
+
 
     constructor() {
         this.loadLogScripts();
@@ -28,15 +37,17 @@ export class LogScript {
     }
 
     public addLogScriptTuple(script: string, nativeScript: string): void {
-        let logScripts = this.getLogScripts();
-        if (logScripts === undefined) {
-            logScripts = new Array(this.logScriptTupleGenerator(script, nativeScript));
-        } else {
+        const logScripts = this.getLogScripts();
+        const duplicate = this.findLogScripts(script);
+
+        if (utils.isEmptyData(duplicate)) {
             logScripts.push(this.logScriptTupleGenerator(script, nativeScript));
+        } else {
+            console.log(chalk.yellow("Duplicate data was found and could not be added!"));
         }
     }
 
-    public getLogScripts(): [[string, string, string]] {
+    public getLogScripts(): logScripts {
         return this.logScripts;
     }
 
@@ -53,24 +64,29 @@ export class LogScript {
         try {
             fs.writeFileSync(this.filename, JSON.stringify(scripts), { mode: 0o777 });
             fs.writeFileSync(this.backupFilename, JSON.stringify(scripts), { mode: 0o777 });
-            console.log(chalk.green("logScripts Save success!"));
+            console.log(chalk.green("Log script save success!"));
         } catch (err) {
             console.log(err);
         }
     }
 
-    public findLogScripts(array: object, item: string): [[string, string, string]] | null {
+    public findLogScripts(item: string): logScriptTuple[] {
         let count = 0;
-        let result = null;
+        const array = this.logScripts;
+        const result = [];
+        const tuplesTraversingCount = Object.keys(this.logScriptSupportedLanguages).length;
+
+        console.log("Try to find log scripts... Keyword:", item);
 
         if (!array) {
             console.log(chalk.yellow("Find log script : Error in array"))
         } else {
             for (let i = 0; i < array.length; i++) {
-                for (let j = 0; j < 3; j++) {
+                // 0 은 식별용 CODE, 1부터 logScriptSupportedLanguages
+                for (let j = 1; j <= tuplesTraversingCount; j++) {
                     if (array[i][j] === item) {
                         count++;
-                        result = array[i];
+                        result.push(array[i]);
                         console.log("Find log script : ", [i, j], array[i][j]);
                     }
                 }
@@ -166,9 +182,9 @@ export class LogScript {
         });
     }
 
-    private logScriptTupleGenerator(script: string, nativeScript: string): [string, string, string] {
+    private logScriptTupleGenerator(script: string, nativeScript: string): logScriptTuple {
         const randomValue = crypto.randomBytes(40).readUInt32BE().toString(16);
-        const code = dateFns.format(new Date(), 'yyMMddHHmmss') + randomValue;
+        const code = (dateFns.format(new Date(), 'yyMMddHHmmss') + randomValue);
         return [code, script, nativeScript];
     }
 }

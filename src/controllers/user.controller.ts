@@ -1,14 +1,30 @@
-import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
-import { User, Profile, Human, InfoDocument, Publication } from '../models/entities/entities.index';
+import { Request, Response, NextFunction, AsyncReturnType } from './../types/types.index';
 import * as utils from '../utils/utils.index';
 import { catchAsync } from '../utils/catchAsync';
-import { ProfileTypeRule, PublicationTypeRule, UserTypeRule } from '../rules/type.rule';
-import { getQueryUnitRule } from '../rules/unit.rule';
+import { User, Profile, Human, InfoDocument, Publication } from '../models/entities/entities.index';
+import { ProfileTypeRule, PublicationTypeRule, UserTypeRule, getQueryUnitRule } from '../rules/rules.index';
 
 async function getUserAttributes(req: Request): Promise<object> {
-    const { user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, user_type, profile_type, activity_name, is_delete, publication_type, user_contribute_point } = req.body;
+    const {
+        user_login_id,
+        user_email,
+        user_password,
+        gender,
+        birthday,
+        real_name,
+        birth_country,
+        birth_city,
+        activity_country,
+        current_live_city,
+        user_type,
+        profile_type,
+        activity_name,
+        is_delete,
+        publication_type,
+        user_contribute_point
+    } = req.body;
 
     // TODO: USING AJV pacakge
 
@@ -17,11 +33,11 @@ async function getUserAttributes(req: Request): Promise<object> {
     }
 }
 
-export async function validateUser(req: Request, res: Response, next: NextFunction): Promise<NextFunction> {
-    const input = await getUserAttributes(req).then(data => { return data });
+export async function validateUser(req: Request, res: Response, next: NextFunction): Promise<NextFunction | void> {
+    const input: any = await getUserAttributes(req).then(data => { return data });
     const { user_type, profile_type, activity_name, user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, publication_type, user_contribute_point } = input;
 
-    const schemaValidations = [
+    const validResult = utils.modelSchemaValidator([
         User.schemaValidation({
             user_type,
             user_login_id,
@@ -40,43 +56,38 @@ export async function validateUser(req: Request, res: Response, next: NextFuncti
         }),
         Profile.schemaValidation({ profile_type, activity_name }),
         Publication.schemaValidation({ publication_type })
-    ];
+    ]);
 
-    let schemaValidationResults: object = [];
-    schemaValidations.forEach(e => {
-        if (e.error) schemaValidationResults.push(e)
-    });
-    const isValid = utils.isEmptyData(schemaValidationResults);
-
-    if (isValid === false) {
-        utils.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
+    if (!utils.isEmptyData(validResult)) {
+        utils.controllerResult(res, 400, validResult, "유효성 검증 불통과");
     } else {
         return next();
     }
 };
 
 export const createUser = catchAsync(async (req: Request, res: Response) => {
-    const input = await getUserAttributes(req).then(data => { return data });
-    const { user_login_id, user_email, user_password, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city } = input;
-    let { user_type, profile_type, activity_name, publication_type } = input;
+    const input: any = await getUserAttributes(req).then(data => { return data });
+    const { user_login_id, user_email, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city } = input;
+    let { user_password, user_type, profile_type, activity_name, publication_type } = input;
 
     const profile_id = uuidv4();
     const human_id = uuidv4();
     const user_id = uuidv4();
     const publication_id = uuidv4();
 
+    user_password = await User.encryptPassword(user_password);
     user_type = UserTypeRule.User;
     profile_type = ProfileTypeRule.User;
     publication_type = PublicationTypeRule.Profile;
     if (utils.isEmptyData(activity_name)) activity_name = user_login_id;
 
-    const user = await User.findAll({ where: { [Op.or]: [{ user_login_id }, { user_email }] } }).then(data => { return data });
+    const user: AsyncReturnType<any> = await User.findAll({ where: { [Op.or]: [{ user_login_id }, { user_email }] } }).then(data => { return data });
 
     if (!utils.isEmptyData(user)) {
         utils.controllerResult(res, 400, null, "아이디 또는 이메일 중복");
     }
     else {
-        const human = await Human.create({
+        const human: AsyncReturnType<any> = await Human.create({
             human_id,
             gender,
             birthday,
@@ -85,24 +96,24 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
             birth_city,
             activity_country,
             current_live_city,
-        })
+        });
 
-        const user = await User.create({
+        const user: AsyncReturnType<any> = await User.create({
             user_id,
             human_id,
             user_type,
             user_login_id,
             user_email,
-            user_password: User.encryptPassword(user_password),
-        })
+            user_password,
+        });
 
-        const publication = await Publication.create({
+        const publication: AsyncReturnType<any> = await Publication.create({
             publication_id,
             publication_type,
             user_id
-        })
+        });
 
-        const profile = await Profile.create({
+        const profile: AsyncReturnType<any> = await Profile.create({
             profile_id,
             human_id,
             publication_id,
@@ -110,7 +121,7 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
             profile_type
         });
 
-        const info_document = await InfoDocument.create({
+        const info_document: AsyncReturnType<any> = await InfoDocument.create({
             profile_id
         });
 
@@ -142,7 +153,7 @@ export const getUsers = catchAsync(async (req: Request, res: Response) => {
 export const getUser = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
 
-    const user = await User.findOne({
+    const user: any = await User.findOne({
         where: { user_id: id },
         include: [Human]
     }).then(data => { return data });
@@ -159,12 +170,12 @@ export const getUser = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const updateUser = catchAsync(async (req: Request, res: Response) => {
-    const input = await getUserAttributes(req).then(data => { return data });
+    const input: any = await getUserAttributes(req).then(data => { return data });
     const { user_email, is_delete, activity_name, profile_type, user_contribute_point } = input;
     const { id } = req.params;
     let isFinalCheck = false;
 
-    const user = await User.findOne({
+    const user: any = await User.findOne({
         where: { user_id: id },
         include: [Human]
     }).then(user => { return user });

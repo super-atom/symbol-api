@@ -5,7 +5,7 @@ import { connection } from '../../database/dbConnect';
 import { Post } from './Post';
 
 export class PostImage extends Model {
-    static schemaValidation(data: object): object {
+    static schemaValidation(data: object): any {
         const schema = Joi.object({
             post_image_id: Joi.string().guid({ version: 'uuidv4' }),
             post_image_type: Joi.number().min(0).max(5),

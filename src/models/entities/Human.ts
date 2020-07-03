@@ -4,7 +4,7 @@ import * as Joi from '@hapi/joi';
 import { connection } from '../../database/dbConnect';
 
 export class Human extends Model {
-    static schemaValidation(data: object): object {
+    static schemaValidation(data: object): any {
         const schema = Joi.object({
             gender: Joi.number(),
             real_name: Joi.string(),

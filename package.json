@@ -3,14 +3,14 @@
     "version": "1.0.0",
     "main": "index.js",
     "scripts": {
-        "start": "cross-env NODE_ENV=production ts-node src/server.ts",
-        "dev": "cross-env ts-node-dev --respawn --no-notify src/server.ts",
-        "local": "cross-env NODE_ENV=local ts-node-dev --respawn --no-notify src/server.ts",
-        "build": "tsc",
+        "start": "cross-env DB_LOCATION=production NODE_ENV=production ts-node dist/server.js",
+        "dev": "cross-env DB_LOCATION=development ts-node-dev --respawn --no-notify src/server.ts",
+        "local": "cross-env DB_LOCATION=local ts-node-dev --respawn --no-notify src/server.ts",
+        "build": "tsc -p tsconfig.production.json",
         "lint": "cross-env eslint '*/**/*.{js,ts,tsx}' --quiet --fix",
         "doc": "cross-env typedoc --out ./docs/ ./src/ --tsconfig ./tsconfig.json",
-        "test": "cross-env NODE_ENV=test jest",
-        "pretest": "cross-env NODE_ENV=test"
+        "test": "cross-env NODE_ENV=test DB_LOCATION=local jest --detectOpenHandles",
+        "clean": "rimraf dist"
     },
     "keywords": [],
     "author": "",
@@ -32,6 +32,7 @@
         "csurf": "^1.11.0",
         "date-fns": "^2.12.0",
         "dotenv": "^8.2.0",
+        "eslint-plugin-jest": "^23.17.1",
         "express": "^4.17.1",
         "express-rate-limit": "^5.1.3",
         "express-session": "^1.17.1",
@@ -44,6 +45,7 @@
         "mkdirp": "^1.0.4",
         "multer": "^1.4.2",
         "mysql2": "^2.1.0",
+        "rimraf": "^3.0.2",
         "sequelize": "^6.1.0",
         "uuid": "^8.0.0"
     },

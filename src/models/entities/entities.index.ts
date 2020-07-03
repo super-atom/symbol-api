@@ -5,5 +5,6 @@ export * from './Human';
 export * from './Profile';
 export * from './Publication';
 export * from './Post';
+export * from './PostImage';
 export * from './PostVideo';
 export * from './InfoDocument';

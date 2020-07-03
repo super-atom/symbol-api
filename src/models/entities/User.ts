@@ -8,19 +8,21 @@ import { Human } from './Human';
 import UserTypeRule from '../../rules/type.rule';
 
 export class User extends Model {
-    static encryptPassword(user_password: number): string {
-        return bcrypt.hashSync(user_password, 10);
+    static encryptPassword(user_password: string): Promise<string> {
+        return bcrypt.hash(user_password, 10).then(data => {
+            return user_password = data;
+        });
     }
 
-    static isValidPassword(user_password: string, password: string): boolean {
-        return bcrypt.compareSync(user_password, password);
+    static isValidPassword(user_password: string, password: string): Promise<boolean> {
+        return bcrypt.compare(user_password, password).then(data => { return data });
     }
 
     static getSignedToken(id: string): string {
         return jwt.sign({ user_id: id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRE });
     }
 
-    static schemaValidation(data: object): object {
+    static schemaValidation(data: object): any {
         const schema = Joi.object({
             user_id: Joi.string().guid({ version: 'uuidv4' }),
             user_type: Joi.number().max(1),
@@ -74,7 +76,7 @@ User.init({
         field: 'user_password'
     },
     user_contribute_point: {
-        type: DataTypes.INTEGER(11),
+        type: DataTypes.BIGINT,
         allowNull: false,
         defaultValue: '0',
         field: 'user_contribute_point'
@@ -89,7 +91,7 @@ User.init({
     sequelize: connection,
     modelName: 'user',
     freezeTableName: true
-})
+});
 
 User.belongsTo(Human, {
     foreignKey: 'human_id',

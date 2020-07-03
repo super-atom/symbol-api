@@ -3,8 +3,12 @@ import * as path from 'path';
 import { ENVIRONMENT_VARIABLES_SETTING } from '../configs/config';
 
 ENVIRONMENT_VARIABLES_SETTING();
-export const GoogleServiceAccountKey = path.resolve(__dirname, process.env.GOOGLE_SERVICE_ACCESS_KEYFILE) + ".json";
-
+export let GoogleServiceAccountKey = '';
+if (process.env.GOOGLE_SERVICE_ACCESS_KEYFILE === undefined) {
+    console.log("Not exists GoogleServiceAccountKey");
+} else {
+    GoogleServiceAccountKey = path.resolve(__dirname, process.env.GOOGLE_SERVICE_ACCESS_KEYFILE) + ".json";
+}
 // generate a url that asks permissions for google service scopes
 const scopes = [
     'https://www.googleapis.com/auth/cloud-platform',

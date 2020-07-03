@@ -1,17 +1,19 @@
-import { ErrorHandler } from './errorHandler';
-import * as utils from '../utils/utils.index';
 
-export function controllerResult(res, statusCode?: number, data?: any, message?: string) {
-    let result = {
-        status: undefined
+import { ErrorHandler } from '../middlewares/errorHandler';
+import * as utils from '../utils/utils.index';
+import { Response } from '../types/types.index';
+
+export function controllerResult(res: Response, statusCode?: number, data?: any, message?: string): object | void {
+    const result = {
+        status: ''
     }
 
     if (utils.isEmptyData(res)) {
-        new ErrorHandler(400, 'Not exist request object');
+        new ErrorHandler('Not exist request object');
     }
 
     if (utils.isEmptyData(statusCode)) {
-        new ErrorHandler(400, 'Not exist statusCode');
+        new ErrorHandler('Not exist statusCode');
     } else {
         if (statusCode === 200) result.status = 'success';
         if (statusCode === 400) result.status = 'error';
@@ -19,7 +21,7 @@ export function controllerResult(res, statusCode?: number, data?: any, message?:
 
     if (utils.isEmptyData(data) === false) result.data = data;
 
-    if (message === null || undefined) {
+    if (message === null || message === undefined) {
         if (data === null) result.status = 'Not exist data';
     } else {
         if (process.env.NODE_ENV === "development") {
@@ -27,5 +29,5 @@ export function controllerResult(res, statusCode?: number, data?: any, message?:
         }
         result.status = message;
     }
-    res.status(statusCode).json(result);
+    if (statusCode) res.status(statusCode).json(result);
 }

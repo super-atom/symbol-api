@@ -1,8 +1,10 @@
-import { Request, Response } from 'express';
+import { Request, Response } from '../types/types.index';
 import * as Joi from '@hapi/joi';
 import * as utils from '../utils/utils.index';
 import { catchAsync } from '../utils/catchAsync';
-import { User } from '../models/entities/User';
+import { User } from '../models/entities/entities.index';
+import { AsyncReturnType } from './../types/types.index';
+import { logStorage } from './../database/logStorage';
 
 export const loginUser = catchAsync(async (req: Request, res: Response) => {
     const { user_login_id, user_password } = req.body;
@@ -20,15 +22,15 @@ export const loginUser = catchAsync(async (req: Request, res: Response) => {
     const isValid = schemaValidationResult.error ? false : true;
 
     if (!isValid) {
-        utils.controllerResult(res, 400, schemaValidationResult.error, "유효성 검증 불통과");
+        utils.controllerResult(res, 400, schemaValidationResult.error, logStorage.getLogScripts()[0][2]);
     } else {
-        const user = await User.findOne({ where: { user_login_id } }).then(data => { return data });
+        const user: AsyncReturnType<any> = await User.findOne({ where: { user_login_id } }).then(data => { return data });
 
         if (user === null) {
             utils.controllerResult(res, 400, null, user_login_id + " 사용자가 존재하지 않습니다.");
         } else {
             const buff = user.user_password;
-            const check = User.isValidPassword(user_password, buff.toString());
+            const check = await User.isValidPassword(user_password, buff.toString());
             if (!check) {
                 utils.controllerResult(res, 400, null, "비밀번호가 일치하지 않습니다.");
             }

@@ -8,7 +8,7 @@ import { Publication } from './Publication';
 import { CaseElement } from './CaseElement';
 
 export class Post extends Model {
-    static schemaValidation(data: object): object {
+    static schemaValidation(data: object): any {
         const schema = Joi.object({
             post_id: Joi.string().guid({ version: 'uuidv4' }),
             post_type: Joi.number().min(1).max(4),

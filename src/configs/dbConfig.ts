@@ -2,9 +2,9 @@ import * as dotenv from 'dotenv';
 import * as chalk from 'chalk';
 dotenv.config();
 
-let dbConfig;
+export let dbConfig: any;
 
-if (process.env.NODE_ENV === 'local') {
+if (process.env.DB_LOCATION === 'local') {
     dbConfig = {
         host: process.env.LOCAL_DB_HOST,
         user: process.env.LOCAL_DB_USER,
@@ -13,7 +13,7 @@ if (process.env.NODE_ENV === 'local') {
         database: process.env.LOCAL_DB_NAME,
     };
 }
-else if (process.env.NODE_ENV === 'development') {
+else if (process.env.DB_LOCATION === 'development') {
     dbConfig = {
         host: process.env.DEV_DB_HOST,
         user: process.env.DEV_DB_USER,
@@ -22,7 +22,7 @@ else if (process.env.NODE_ENV === 'development') {
         database: process.env.DEV_DB_NAME,
     };
 }
-else if (process.env.NODE_ENV === 'production') {
+else if (process.env.DB_LOCATION === 'production') {
     dbConfig = {
         host: process.env.LIVE_DB_HOST,
         user: process.env.LIVE_DB_USER,
@@ -31,8 +31,5 @@ else if (process.env.NODE_ENV === 'production') {
         database: process.env.LIVE_DB_NAME,
     };
 } else {
-    console.error(chalk.red("DB config 오류"));
+    console.log(chalk.red("DB config 오류"));
 }
-
-
-export default dbConfig;

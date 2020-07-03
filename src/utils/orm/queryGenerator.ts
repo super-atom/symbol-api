@@ -1,9 +1,4 @@
-
-function queryGenerator() {
-    return false;
-}
-
-function insert(tableName: string, data: any) {
+export function insert(tableName: string, data: any): string {
     const column = [];
     const value = [];
     for (const key in data) {
@@ -14,5 +9,3 @@ function insert(tableName: string, data: any) {
 
     return query;
 }
-
-export default queryGenerator;

@@ -8,7 +8,7 @@ export enum UserTypeRule {
 
 export enum PublicationTypeRule {
     Profile = 1,
-    Case = 2,
+    CaseElement = 2,
     PostVideo = 3,
     PostImage = 4,
 }

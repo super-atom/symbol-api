@@ -12,7 +12,8 @@ import * as multer from 'multer';
 import * as compression from 'compression';
 import * as methodOverride from 'method-override';
 import routes from './routes/routes.index';
-import { handleError, ErrorHandler } from './utils/errorHandler';
+import { Request, Response, NextFunction } from './types/types.index';
+import { handleError, ErrorHandler } from './middlewares/errorHandler';
 import { logger } from "./middlewares/logger";
 import { limiter } from './middlewares/rateLimiter';
 
