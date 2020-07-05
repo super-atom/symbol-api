@@ -1,5 +1,8 @@
 import { google } from 'googleapis';
 import * as path from 'path';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 export let GoogleServiceAccountKey = '';
 if (process.env.GOOGLE_SERVICE_ACCESS_KEYFILE === undefined) {

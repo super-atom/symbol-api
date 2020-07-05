@@ -23,6 +23,7 @@ import * as utils from './utils/utils.index';
 
 // global.__rootdir__ = __dirname || process.cwd();
 
+config;
 connection;
 app.listen(config.app.server_port, () => {
     utils.myServerStateInfomation();

@@ -9,3 +9,4 @@ export * from './downloadFile';
 export * from './network';
 export * from './modelSchemaValidator';
 export * from './dbConnectionCheck';
+export * from './orm/sequelizeInstance';

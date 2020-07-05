@@ -3,14 +3,14 @@ import * as request from 'supertest';
 import app from '../src/app';
 import { db_server, setHeader } from './../jest.global';
 // import { config, connection } from './../jest.setup';
-import * as utils from '../src/utils/utils.index';
+import { profileTest } from './data/testData';
 
 let app_server;
 let db;
 
 beforeAll(async done => {
     db = await db_server();
-    app_server = http.createServer(app).listen('3003');
+    app_server = http.createServer(app).listen('3004');
     done();
 });
 
@@ -20,17 +20,12 @@ afterAll(async done => {
     done();
 });
 
-describe('Application initialization Test', () => {
-    it('DB connection test', async (done) => {
-        const res = await utils.dbConnectionCheck(db);
-        expect(res).toBeTruthy();
-        done();
-    });
-
-    it('Server connection test', async (done) => {
+describe('Profile Controller Test', () => {
+    it('Get All Profile', async (done) => {
         const res = await request(app_server)
-            .get('/')
+            .get(profileTest.getProfiles.getEndPoint())
             .set(setHeader);
+
         expect(res.status).toBe(200);
         done();
     });

@@ -48,7 +48,7 @@ export const db: any = {
         db.schema = process.env.DEV_TEST_DB_SCHEMA;
     }
     else if (process.env.MODE === ENV_MODE.PRODUCTION) {
-        app.server_port = process.env.LOCAL_APP_SERVER_PORT;
+        app.server_port = process.env.LIVE_APP_SERVER_PORT;
         db.host = process.env.LIVE_DB_HOST;
         db.user = process.env.LIVE_DB_USER;
         db.port = process.env.LIVE_DB_PORT;
