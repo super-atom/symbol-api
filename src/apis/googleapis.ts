@@ -1,8 +1,6 @@
 import { google } from 'googleapis';
 import * as path from 'path';
-import { ENVIRONMENT_VARIABLES_SETTING } from '../configs/config';
 
-ENVIRONMENT_VARIABLES_SETTING();
 export let GoogleServiceAccountKey = '';
 if (process.env.GOOGLE_SERVICE_ACCESS_KEYFILE === undefined) {
     console.log("Not exists GoogleServiceAccountKey");

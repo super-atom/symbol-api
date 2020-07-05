@@ -13,8 +13,9 @@
         "docs",
         "externals",
         "auth",
-        "./jest.config.js",
-        "./jest.setup.js",
+        "settings",
+        "jest.config.js",
+        "jest.setup.ts",
         "**/*.spec.ts",
         "**/*.test.ts"
     ],

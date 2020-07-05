@@ -11,7 +11,7 @@ export const loginUser = catchAsync(async (req: Request, res: Response) => {
 
     const schema = Joi.object({
         user_login_id: Joi.string().required().min(3).max(10),
-        user_password: Joi.string().required(),
+        user_password: Joi.string().required().min(8).max(20),
     }).options({ abortEarly: false });
 
     const schemaValidationResult = schema.validate({
@@ -22,7 +22,7 @@ export const loginUser = catchAsync(async (req: Request, res: Response) => {
     const isValid = schemaValidationResult.error ? false : true;
 
     if (!isValid) {
-        utils.controllerResult(res, 400, schemaValidationResult.error, logStorage.getLogScripts()[0][2]);
+        utils.controllerResult(res, 400, schemaValidationResult.error, "유효성 검증 불통과");
     } else {
         const user: AsyncReturnType<any> = await User.findOne({ where: { user_login_id } }).then(data => { return data });
 

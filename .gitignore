@@ -1,21 +1,7 @@
-# Logs #
-/logs
-*.log
-*.log*
-
-# Node files #
-node_modules/
-npm-debug.log
-yarn-error.log
-.env*
-
 # OS generated files #
 .DS_Store
 Thumbs.db
 .tmp/
-
-# Dist #
-dist/
 
 # IDE #
 .idea/
@@ -23,8 +9,21 @@ dist/
 .awcache
 .vscode/
 
+# Node files #
+node_modules/
+npm-debug.log
+yarn-error.log
+.env*
+
+# Logs #
+*.log
+*.log*
+
 # Directory
+/dist/
+/logs
 /auth/
 /externals/
 /docs/
+/settings/
 /src/static/

@@ -24,9 +24,8 @@ export class LogScript {
         KR: 2
     }
 
-
     constructor() {
-        this.loadLogScripts();
+        // this.loadLogScripts();
     }
 
     static getInstance(): LogScript {
@@ -106,6 +105,7 @@ export class LogScript {
      */
     private loadLogScripts(): any {
         let file = this.filename;
+        let isBackupFile = true;
         // 경로에 해당하는 디렉토리가 없으면 폴더를 생성
         mkdirp.sync(this.backupPath);
 
@@ -136,6 +136,8 @@ export class LogScript {
                     // TODO : 원격 저장소의 백업파일 로드
                 }
             }
+        } else {
+            isBackupFile = false;
         }
 
         try {
@@ -150,6 +152,10 @@ export class LogScript {
             }
             else if (loadScriptFile.length === 0) {
                 console.log(chalk.yellow("Log script file is empty"));
+            }
+            else if (isBackupFile === true) {
+                console.log("Now that the backup file has been loaded, a new save file is created...");
+                this.saveLogScripts();
             }
             else {
                 console.log(chalk.green("Found log script file : " + file));

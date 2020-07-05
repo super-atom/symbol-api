@@ -1,6 +1,7 @@
 module.exports = {
-    roots: ['<rootDir>/src/tests'],
-    setupFiles: ['./jest.setup.js'],
+    roots: ['<rootDir>/tests'],
+    setupFiles: ['<rootDir>/jest.setup.ts'],
+    setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
     globals: {
         'ts-jest': {
             tsConfig: 'tsconfig.json',
@@ -11,7 +12,7 @@ module.exports = {
         },
     },
     testMatch: ['**/tests/**/*.+(ts|js)', '**/?(*.)+(spec|test).+(ts|js)'],
-    testPathIgnorePatterns: ['/lib/', '/node_modules/'],
+    testPathIgnorePatterns: ['/lib/', '/node_modules/', '/auth/', '/externals/', '/logs/', '/tests/mockup.ts'],
     preset: 'ts-jest',
     testEnvironment: 'node',
     testURL: 'http://127.0.0.1',
@@ -21,7 +22,7 @@ module.exports = {
     },
     transformIgnorePatterns: ['/node_modules/'],
     collectCoverage: false,
-    // coveragePathIgnorePatterns: ['/node_modules/', './src/types/modules.d.ts.d.ts'],
-    // coverageReporters: ['json'],
-    // coverageDirectory: '/jest',
+    coveragePathIgnorePatterns: ['/node_modules/'],
+    coverageReporters: ['json', 'lcov', 'text', 'clover'],
+    coverageDirectory: '/jest',
 };

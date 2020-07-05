@@ -1,7 +1,8 @@
 import * as os from 'os';
-const ifaces = os.networkInterfaces();
+import * as config from '../configs/config';
 
-export function myIpInformation() {
+export function myIpInformation(): any {
+    const ifaces = os.networkInterfaces();
     Object.keys(ifaces).forEach(function (ifname) {
         let alias = 0;
 
@@ -21,4 +22,8 @@ export function myIpInformation() {
             ++alias;
         });
     });
+}
+
+export function myServerStateInfomation(): any {
+    console.log(`App server running...\nMode : ${process.env.NODE_ENV}\nServer Port : ${config.db.port}\nDB HOST : ${config.db.host}\nDB SCHEMA : ${config.db.schema}`);
 }
