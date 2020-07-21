@@ -4,7 +4,6 @@ import * as utils from '../utils/utils.index';
 import { catchAsync } from '../utils/catchAsync';
 import { User } from '../models/entities/entities.index';
 import { AsyncReturnType } from './../types/types.index';
-import { logStorage } from './../database/logStorage';
 
 export const loginUser = catchAsync(async (req: Request, res: Response) => {
     const { user_login_id, user_password } = req.body;

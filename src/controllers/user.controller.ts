@@ -131,44 +131,6 @@ export const createUser = catchAsync(async (req: Request, res: Response) => {
     }
 });
 
-export const getUsers = catchAsync(async (req: Request, res: Response) => {
-    const { page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
-
-    const data = await User.findAndCountAll(utils.paginate(
-        page,
-        limit,
-        {
-            where: { [Op.not]: [{ is_delete: 1 }] },
-            order: [[sortBy, order]]
-        }
-    )).then(data => { return data });
-
-    if (utils.isEmptyData(data)) {
-        utils.controllerResult(res, 400, null);
-    } else {
-        utils.controllerResult(res, 200, data);
-    }
-});
-
-export const getUser = catchAsync(async (req: Request, res: Response) => {
-    const { id } = req.params;
-
-    const user: any = await User.findOne({
-        where: { user_id: id },
-        include: [Human]
-    }).then(data => { return data });
-
-    if (utils.isEmptyData(user)) {
-        utils.controllerResult(res, 400, null)
-    }
-    else {
-        const { user_type, user_login_id, user_email, user_contribute_point, is_delete, createdAt, updatedAt, human } = user;
-        utils.controllerResult(res, 200, {
-            user_type, user_login_id, user_email, user_contribute_point, is_delete, createdAt, updatedAt, human
-        });
-    }
-});
-
 export const updateUser = catchAsync(async (req: Request, res: Response) => {
     const input: any = await getUserAttributes(req).then(data => { return data });
     const { user_email, is_delete, activity_name, profile_type, user_contribute_point } = input;
@@ -220,5 +182,39 @@ export const deleteUser = catchAsync(async (req: Request, res: Response) => {
     else {
         await User.update({ is_delete: 1 }, { where: { user_id: id } });
         utils.controllerResult(res, 200);
+    }
+});
+
+export const getUsers = catchAsync(async (req: Request, res: Response) => {
+    const { page = 1, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
+
+    const data = await User.findAndCountAll(utils.paginate(
+        page,
+        limit,
+        {
+            where: { [Op.not]: [{ is_delete: 1 }] },
+            order: [[sortBy, order]]
+        }
+    )).then(data => { return data });
+
+    utils.getControllerResult(res, data);
+});
+
+export const getUser = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    const user: any = await User.findOne({
+        where: { user_id: id },
+        include: [Human]
+    }).then(data => { return data });
+
+    if (utils.isEmptyData(user)) {
+        utils.controllerResult(res, 400, null)
+    }
+    else {
+        const { user_type, user_login_id, user_email, user_contribute_point, is_delete, createdAt, updatedAt, human } = user;
+        utils.controllerResult(res, 200, {
+            user_type, user_login_id, user_email, user_contribute_point, is_delete, createdAt, updatedAt, human
+        });
     }
 });

@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
 import { catchAsync } from '../utils/catchAsync';
 import * as utils from '../utils/utils.index';
-import { Request, Response, NextFunction, AsyncReturnType } from './../types/types.index';
+import { Request, Response, NextFunction, AsyncReturnType } from '../types/types.index';
 import { Human, Profile, CaseElement, Publication, CaseConfiguration } from '../models/entities/entities.index';
 import { getQueryUnitRule, PublicationTypeRule } from '../rules/rules.index';
 
@@ -41,7 +41,7 @@ export async function validateCaseElement(req: Request, res: Response, next: Nex
     const input: AsyncReturnType<any> = await getCaseElementAttributes(req).then(data => { return data });
     const { profiles, case_element_name, case_element_description, case_element_occurred_date, gender, birthday, real_name, birth_country, birth_city, activity_country, current_live_city, activity_name, native_activity_name, profile_description, profile_type, publication_type, is_hide, is_delete, is_published } = input;
 
-    const schemaValidations = [
+    const validResult = utils.modelSchemaValidator([
         Human.schemaValidation({
             gender,
             birthday,
@@ -68,17 +68,10 @@ export async function validateCaseElement(req: Request, res: Response, next: Nex
             is_delete,
             is_published
         })
-    ];
+    ]);
 
-    const schemaValidationResults: [] = [];
-    schemaValidations.forEach(e => {
-        if (e.error) schemaValidationResults.push(e.error)
-    });
-
-    const isValid = utils.isEmptyData(schemaValidationResults);
-
-    if (isValid === false) {
-        utils.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
+    if (!utils.isEmptyData(validResult)) {
+        utils.controllerResult(res, 400, validResult, "유효성 검증 불통과");
     }
     else {
         const notExistProfiles: Array<string> = [];
@@ -153,64 +146,6 @@ export const createCaseElement = catchAsync(async (req: Request, res: Response) 
     }
 });
 
-export const getCaseElements = catchAsync(async (req: Request, res: Response) => {
-    const { profile, page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
-
-    let sql;
-    if (profile) sql = { where: { 'profile_id': profile } }
-    const profileData: AsyncReturnType<any> = await Profile.findAll(sql);
-
-    if (utils.isEmptyData(profileData)) {
-        utils.controllerResult(res, 400, null, "프로필이 존재하지 않습니다.");
-    } else {
-        const data: AsyncReturnType<any> = await CaseElement.findAndCountAll(
-            utils.paginate(
-                page,
-                limit,
-                {
-                    include: [Publication],
-                    order: [[sortBy, order]]
-                },
-            )
-        ).then(data => { return data });
-
-        if (utils.isEmptyData(data)) {
-            utils.controllerResult(res, 400);
-        } else {
-            utils.controllerResult(res, 200, data);
-        }
-    }
-});
-
-export const getCaseElement = catchAsync(async (req: Request, res: Response) => {
-    const { id, page = '0', limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
-
-    let sql;
-    if (id) sql = { where: { 'profile_id': id } }
-    const caseElement: AsyncReturnType<any> = await CaseElement.findAll(sql);
-
-    if (utils.isEmptyData(caseElement)) {
-        utils.controllerResult(res, 400, null, "사건이 존재하지 않습니다.");
-    } else {
-        const data: AsyncReturnType<any> = await CaseElement.findAndCountAll(
-            utils.paginate(
-                page,
-                limit,
-                {
-                    include: [Publication],
-                    order: [[sortBy, order]]
-                },
-            )
-        ).then(data => { return data });
-
-        if (utils.isEmptyData(data)) {
-            utils.controllerResult(res, 400);
-        } else {
-            utils.controllerResult(res, 200, data);
-        }
-    }
-});
-
 export const updateCaseElement = catchAsync(async (req: Request, res: Response) => {
     const { id, } = req.params;
     const input: AsyncReturnType<any> = await getCaseElementAttributes(req).then(data => { return data });
@@ -273,5 +208,66 @@ export const deleteCaseElement = catchAsync(async (req: Request, res: Response) 
     else {
         Publication.update({ is_delete: 1 }, { where: { publication_id: caseElement.publication_id } });
         utils.controllerResult(res, 200);
+    }
+});
+
+export const getCaseElements = catchAsync(async (req: Request, res: Response) => {
+    const { page = 1, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
+
+    const data: AsyncReturnType<any>
+        = await CaseElement
+            .findAndCountAll(
+                utils.paginate(
+                    page,
+                    limit,
+                    {
+                        include: [Publication],
+                        order: [[sortBy, order]]
+                    },
+                )
+            )
+            .then(data => { return data });
+
+    utils.getControllerResult(res, data);
+});
+
+export const getCaseElementById = catchAsync(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    const data: AsyncReturnType<any>
+        = await CaseElement
+            .findByPk(id)
+            .then(data => { return data });
+
+    utils.getControllerResult(res, data);
+});
+
+export const getCaseElementsByProfileId = catchAsync(async (req: Request, res: Response) => {
+    const { profileId, page = 1, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
+
+    let sql;
+    if (profileId) sql = { where: { 'profile_id': profileId } }
+    const profileData: AsyncReturnType<any>
+        = await Profile
+            .findAll(sql);
+
+    if (utils.isEmptyData(profileData)) {
+        utils.controllerResult(res, 400, null, "프로필이 존재하지 않습니다.");
+    } else {
+        const data: AsyncReturnType<any>
+            = await CaseElement
+                .findAndCountAll(
+                    utils.paginate(
+                        page,
+                        limit,
+                        {
+                            include: [Publication],
+                            order: [[sortBy, order]]
+                        },
+                    )
+                )
+                .then(data => { return data });
+
+        utils.getControllerResult(res, data);
     }
 });

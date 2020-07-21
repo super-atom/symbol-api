@@ -3,5 +3,4 @@ export enum getQueryUnitRule {
     Small = 10,
     Medium = 25,
     Large = 50,
-    Maximum = 100,
 }

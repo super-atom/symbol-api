@@ -2,7 +2,6 @@ import * as http from 'http';
 import * as request from 'supertest';
 import app from '../src/app';
 import { db_server, setHeader } from './../jest.global';
-// import { config, connection } from './../jest.setup';
 import * as utils from '../src/utils/utils.index';
 
 let app_server;

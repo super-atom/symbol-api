@@ -28,7 +28,7 @@ export async function validatePostImage(req: Request, res: Response, next: NextF
     const input: AsyncReturnType<any> = await getPostImageAttributes(req).then(data => { return data });
     const { case_element_id, post_type, activity_name, post_title, post_content, post_image_type, is_exist_thumbnails, publication_type } = input;
 
-    const schemaValidations = [
+    const validResult = utils.modelSchemaValidator([
         Profile.schemaValidation({
             activity_name
         }),
@@ -47,16 +47,10 @@ export async function validatePostImage(req: Request, res: Response, next: NextF
         Publication.schemaValidation({
             publication_type
         })
-    ];
+    ]);
 
-    const schemaValidationResults: Array<any | never> = [];
-    schemaValidations.forEach(e => {
-        if (e.error) schemaValidationResults.push(e.error)
-    });
-    const isValid = utils.isEmptyData(schemaValidationResults);
-
-    if (isValid === false) {
-        utils.controllerResult(res, 400, schemaValidationResults, "유효성 검증 불통과");
+    if (!utils.isEmptyData(validResult)) {
+        utils.controllerResult(res, 400, validResult, "유효성 검증 불통과");
     } else {
         return next();
     }
@@ -108,8 +102,8 @@ export const createPostImage = catchAsync(async (req: Request, res: Response) =>
 
         // TODO : 썸네일 생성유무 조건 판별 & 생성 로직
 
-        imageUrl = await utils.uploadFile(image, filename)
-            .then(data => { return data });
+        // imageUrl = await utils.uploadFile(image, filename)
+        //     .then(data => { return data });
 
         if (imageUrl) isFinalCheck = true;
     }

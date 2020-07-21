@@ -11,8 +11,8 @@ router.route('/')
     .get(profileController.getProfiles)
 
 router.route('/:id')
-    .get(profileController.getProfile)
     .patch(authenticate, validateProfile, profileController.updateProfile)
     .delete(authenticate, validateProfile, profileController.deleteProfile)
+    .get(profileController.getProfileById)
 
 export default router;
