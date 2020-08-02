@@ -45,7 +45,7 @@ User.init({
         field: 'user_id'
     },
     user_type: {
-        type: DataTypes.INTEGER(1),
+        type: DataTypes.TINYINT(),
         allowNull: false,
         defaultValue: UserTypeRule.User,
         validate: {

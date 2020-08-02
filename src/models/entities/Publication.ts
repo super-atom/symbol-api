@@ -31,7 +31,7 @@ Publication.init({
         field: 'publication_id'
     },
     publication_type: {
-        type: DataTypes.TINYINT(1),
+        type: DataTypes.TINYINT(),
         allowNull: false,
         validate: {
             min: 1,
@@ -40,13 +40,13 @@ Publication.init({
         field: 'publication_type'
     },
     perfection: {
-        type: DataTypes.TINYINT(3),
+        type: DataTypes.TINYINT(),
         allowNull: false,
         defaultValue: 0,
         field: 'perfection'
     },
     perfection_state: {
-        type: DataTypes.TINYINT(1),
+        type: DataTypes.TINYINT(),
         allowNull: false,
         defaultValue: 0,
         field: 'perfection_state'

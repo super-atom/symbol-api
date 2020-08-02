@@ -1,0 +1,14 @@
+{
+    "apps": [
+        {
+            "name": "api",
+            "script": "./dist/server.js",
+            "instances": 1,
+            "env": {
+                "PORT": 9406,
+                "NODE_ENV": "production"
+            },
+            "exec_mode": "fork_mode"
+        }
+    ]
+}

@@ -8,16 +8,19 @@ export const getCaseConfigurationByProfileId = catchAsync(async (req: Request, r
     const { page = 0, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
     const { id } = req.params;
 
-    const data: AsyncReturnType<any> = await CaseConfiguration.findAndCountAll(
-        utils.paginate(
-            page,
-            limit,
-            {
-                where: { 'profile_id': id },
-                order: [[sortBy, order]]
-            },
-        )
-    ).then(data => { return data });
+    const data: AsyncReturnType<any>
+        = await CaseConfiguration
+            .findAndCountAll(
+                utils.paginate(
+                    Number(page),
+                    Number(limit),
+                    {
+                        where: { 'profile_id': id },
+                        order: [[sortBy, order]]
+                    },
+                )
+            )
+            .then(data => { return data });
 
     utils.getControllerResult(res, data);
 });

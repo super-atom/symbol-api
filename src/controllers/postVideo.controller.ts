@@ -219,8 +219,8 @@ export const getPostVideosByProfileId = catchAsync(async (req: Request, res: Res
         = await Post
             .findAndCountAll(
                 utils.paginate(
-                    page,
-                    limit,
+                    Number(page),
+                    Number(limit),
                     {
                         where: {
                             [Op.and]: [
@@ -239,7 +239,7 @@ export const getPostVideosByProfileId = catchAsync(async (req: Request, res: Res
 export const getPostVideosByActivityNames = catchAsync(async (req: Request, res: Response) => {
     const { page = 1, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
     const { activityNames } = req.query;
-    const sql = {
+    const sql: any = {
         include: {
             model: Post
         },
@@ -253,8 +253,8 @@ export const getPostVideosByActivityNames = catchAsync(async (req: Request, res:
     const data: AsyncReturnType<any>
         = await PostVideo
             .findAndCountAll(utils.paginate(
-                page,
-                limit,
+                Number(page),
+                Number(limit),
                 sql
             ))
             .then(data => { return data });

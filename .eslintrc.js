@@ -1,20 +1,14 @@
 module.exports = {
     plugins: ['@typescript-eslint', '@typescript-eslint/eslint-plugin', 'eslint-plugin-tsdoc', 'jest'],
-    parser: '@typescript-eslint/parser', // Specifies the ESLint parser
+    parser: '@typescript-eslint/parser',
     parserOptions: {
-        project: 'tsconfig.json',
+        project: './tsconfig.production.json',
         tsconfigRootDir: __dirname,
-        ecmaVersion: 2020, // Allows for the parsing of modern ECMAScript features
-        sourceType: 'module', // Allows for the use of imports
+        ecmaVersion: 2020,
+        sourceType: 'module',
     },
-    extends: [
-        'prettier/@typescript-eslint', // Uses eslint-config-prettier to disable ESLint rules from @typescript-eslint/eslint-plugin that would conflict with prettier
-        'plugin:jest/recommended',
-        'plugin:@typescript-eslint/recommended', // Uses the recommended rules from the @typescript-eslint/eslint-plugin
-    ],
+    extends: ['prettier/@typescript-eslint', 'plugin:jest/recommended', 'plugin:@typescript-eslint/recommended'],
     rules: {
-        // Place to specify ESLint rules. Can be used to overwrite rules specified from the extended configs
-        // e.g. "@typescript-eslint/explicit-function-return-type": "off",
         '@typescript-eslint/no-namespace': 'off',
         '@typescript-eslint/camelcase': 'off',
         '@typescript-eslint/interface-name-prefix': 'off',

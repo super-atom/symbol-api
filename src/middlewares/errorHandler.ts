@@ -10,7 +10,7 @@ export class ErrorHandler extends Error {
 
 export const handleError = (err: ErrorHandler, res: Response): void => {
     const { message, stack } = err;
-    const options = {
+    const options: any = {
         status: "error"
     };
     if (process.env.NODE_ENV === "development") {

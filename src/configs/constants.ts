@@ -1,7 +1,5 @@
-export enum ENV_MODE {
+export enum NODE_ENV {
     LOCAL = "local",
-    LOCAL_TEST = "local_test",
     DEV = "development",
-    DEV_TEST = "development_test",
-    PRODUCTION = "production"
+    LIVE = "production"
 }

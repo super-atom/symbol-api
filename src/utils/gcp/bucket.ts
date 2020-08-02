@@ -5,7 +5,7 @@ export async function listBuckets(): Promise<void> {
     // Lists all buckets in the current project
     const [buckets] = await storage.getBuckets();
     console.log('Buckets:');
-    buckets.forEach(bucket => {
+    buckets.forEach((bucket: any) => {
         console.log(bucket.name);
     });
 }
@@ -39,7 +39,7 @@ export async function uploadFile(filename: string, filenameToSave: string): Prom
             }
         });
 
-        stream.on('error', (err) => {
+        stream.on('error', (err: any) => {
             return err;
         });
         stream.on('finish', () => {

@@ -25,5 +25,5 @@ export function myIpInformation(): any {
 }
 
 export function myServerStateInfomation(): any {
-    console.log(`App server running...\nMode : ${process.env.NODE_ENV}\nServer Port : ${config.db.port}\nDB HOST : ${config.db.host}\nDB SCHEMA : ${config.db.schema}`);
+    console.log(`App server running...\nMode : ${process.env.NODE_ENV}\nServer Port : ${config.app.server_port}\nDB Port : ${config.db.port}\nDB HOST : ${config.db.host}\nDB SCHEMA : ${config.db.schema}`);
 }

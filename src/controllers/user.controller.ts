@@ -189,8 +189,8 @@ export const getUsers = catchAsync(async (req: Request, res: Response) => {
     const { page = 1, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
 
     const data = await User.findAndCountAll(utils.paginate(
-        page,
-        limit,
+        Number(page),
+        Number(limit),
         {
             where: { [Op.not]: [{ is_delete: 1 }] },
             order: [[sortBy, order]]

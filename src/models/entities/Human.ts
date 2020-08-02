@@ -29,7 +29,7 @@ Human.init({
         field: 'human_id'
     },
     gender: {
-        type: DataTypes.TINYINT(1),
+        type: DataTypes.TINYINT(),
         field: 'gender'
     },
     birthday: {

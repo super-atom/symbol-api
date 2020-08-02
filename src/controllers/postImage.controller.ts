@@ -66,7 +66,7 @@ export const createPostImage = catchAsync(async (req: Request, res: Response) =>
     const post_image_id = uuidv4();
     let isUploadPossibleCheck = false;
     let isFinalCheck = false;
-    let imageUrl = null;
+    const imageUrl = null;
 
     // Final Check
     const profileData: AsyncReturnType<any> = await Profile.findOne({ where: { activity_name } })
@@ -146,17 +146,17 @@ export const createPostImage = catchAsync(async (req: Request, res: Response) =>
 });
 
 export const getPostImages = catchAsync(async (req: Request, res: Response) => {
-
+    return false;
 });
 
 export const getPostImage = catchAsync(async (req: Request, res: Response) => {
-
+    return false;
 });
 
 export const updatePostImage = catchAsync(async (req: Request, res: Response) => {
-
+    return false;
 });
 
 export const deletePostImage = catchAsync(async (req: Request, res: Response) => {
-
+    return false;
 });

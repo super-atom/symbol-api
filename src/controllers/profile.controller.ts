@@ -173,22 +173,22 @@ export const deleteProfile = catchAsync(async (req: Request, res: Response) => {
 
 export const getProfiles = catchAsync(async (req: Request, res: Response) => {
     const { page = 1, limit = getQueryUnitRule.Small, order = 'ASC', sortBy = 'createdAt' } = req.query;
-    const { profiles } = req.query;
+    const { activity_name } = req.query;
 
-    const sql = {
+    const sql: any = {
         include: [Human, Publication],
         order: [[sortBy, order]]
     };
 
-    if (!utils.isEmptyData(profiles)) {
-        sql.where = { activity_name: profiles };
+    if (activity_name) {
+        sql.where = { activity_name };
     }
 
     const data: AsyncReturnType<any>
         = await Profile.findAndCountAll(
             utils.paginate(
-                page,
-                limit,
+                Number(page),
+                Number(limit),
                 sql
             ))
             .then(data => { return data });

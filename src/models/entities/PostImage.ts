@@ -25,7 +25,7 @@ PostImage.init({
         field: 'post_image_id'
     },
     post_image_type: {
-        type: DataTypes.TINYINT(1),
+        type: DataTypes.TINYINT(),
         allowNull: false,
         validate: {
             min: 0,

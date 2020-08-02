@@ -77,9 +77,10 @@ export async function validateCaseElement(req: Request, res: Response, next: Nex
         const notExistProfiles: Array<string> = [];
 
         if (!utils.isEmptyData(profiles)) {
-            const profilesData: AsyncReturnType<any> = await Profile
-                .findAll({ where: { activity_name: profiles } })
-                .then(data => { return data });
+            const profilesData: AsyncReturnType<any>
+                = await Profile
+                    .findAll({ where: { activity_name: profiles } })
+                    .then(data => { return data });
 
             profiles.forEach((data: string, index: number) => {
                 if (utils.isEmptyData(profilesData[index])) {
@@ -103,35 +104,42 @@ export const createCaseElement = catchAsync(async (req: Request, res: Response) 
     const publication_id = uuidv4();
     const case_element_id = uuidv4();
 
-    const caseElement: AsyncReturnType<any> = await CaseElement.findAll({
-        where: {
-            [Op.and]: [
-                { case_element_name },
-                { case_element_occurred_date }
-            ]
-        }
-    }).then(data => { return data });
+    const caseElement: AsyncReturnType<any>
+        = await CaseElement
+            .findAll({
+                where: {
+                    [Op.and]: [
+                        { case_element_name },
+                        { case_element_occurred_date }
+                    ]
+                }
+            }).then(data => { return data });
 
     if (utils.isEmptyData(caseElement) === false) {
         utils.controllerResult(res, 400, null, "사건 중복");
     } else {
-        const publication: AsyncReturnType<any> = await Publication.create({
-            publication_type,
-            publication_id,
-            user_id,
-        });
+        const publication: AsyncReturnType<any>
+            = await Publication
+                .create({
+                    publication_type,
+                    publication_id,
+                    user_id,
+                });
 
-        const case_element: AsyncReturnType<any> = await CaseElement.create({
-            case_element_id,
-            publication_id,
-            case_element_name,
-            case_element_description,
-            case_element_occurred_date
-        });
+        const case_element: AsyncReturnType<any>
+            = await CaseElement
+                .create({
+                    case_element_id,
+                    publication_id,
+                    case_element_name,
+                    case_element_description,
+                    case_element_occurred_date
+                });
 
-        const profilesData: AsyncReturnType<any> = await Profile
-            .findAll({ where: { activity_name: profiles } })
-            .then(data => { return data });
+        const profilesData: AsyncReturnType<any>
+            = await Profile
+                .findAll({ where: { activity_name: profiles } })
+                .then(data => { return data });
 
         Promise
             .all([publication, case_element])
@@ -147,41 +155,48 @@ export const createCaseElement = catchAsync(async (req: Request, res: Response) 
 });
 
 export const updateCaseElement = catchAsync(async (req: Request, res: Response) => {
-    const { id, } = req.params;
+    const { id } = req.params;
     const input: AsyncReturnType<any> = await getCaseElementAttributes(req).then(data => { return data });
     const { case_element_name, case_element_description, case_element_occurred_date, is_hide, is_delete, is_published, profiles } = input;
 
-    const caseElement: AsyncReturnType<any> = await CaseElement.findByPk(id)
-        .then(() => CaseElement.update(
-            {
-                case_element_name,
-                case_element_description,
-                case_element_occurred_date,
-            },
-            {
-                where: { case_element_id: id }
-            }));
+    const caseElement: AsyncReturnType<any>
+        = await CaseElement
+            .findByPk(id)
+            .then(() => CaseElement.update(
+                {
+                    case_element_name,
+                    case_element_description,
+                    case_element_occurred_date,
+                },
+                {
+                    where: { case_element_id: id }
+                }));
 
-    const caseConfiguration: AsyncReturnType<any> = await CaseConfiguration.destroy(
-        { case_element_id: caseElement.case_element_id },
-    );
+    const caseConfiguration: AsyncReturnType<any>
+        = await CaseConfiguration
+            .findOne(
+                { where: { case_element_id: caseElement.case_element_id } },
+            );
 
-    const publication: AsyncReturnType<any> = await Publication.update(
-        { is_hide, is_delete, is_published },
-        { where: { case_element_id: caseElement.case_element_id } }
-    );
+    const publication: AsyncReturnType<any>
+        = await Publication
+            .update(
+                { is_hide, is_delete, is_published },
+                { where: { case_element_id: caseElement.case_element_id } }
+            );
 
-    const profilesData: AsyncReturnType<any> = await Profile
-        .findAll({ where: { activity_name: profiles } })
-        .then(data => { return data });
+    const profilesData: AsyncReturnType<any>
+        = await Profile
+            .findAll({ where: { activity_name: profiles } })
+            .then(data => { return data });
 
     Promise
         .all([caseElement, caseConfiguration, publication])
-        .then(() => profiles.forEach((data, index) => {
+        .then(() => profiles.forEach((data: any, index: number) => {
             CaseConfiguration.create({
                 case_configuration_id: uuidv4(),
                 profile_id: profilesData[index].profile_id,
-                case_element_id
+                case_element_id: id
             })
         }))
         .finally(() => utils.controllerResult(res, 200, {
@@ -200,7 +215,10 @@ export const updateCaseElement = catchAsync(async (req: Request, res: Response) 
 
 export const deleteCaseElement = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const caseElement: any = await CaseElement.findByPk(id).then(data => { return data });
+    const caseElement: AsyncReturnType<any>
+        = await CaseElement
+            .findByPk(id)
+            .then(data => { return data });
 
     if (utils.isEmptyData(caseElement)) {
         utils.controllerResult(res, 400, null, "케이스를 찾을 수 없습니다.");
@@ -218,8 +236,8 @@ export const getCaseElements = catchAsync(async (req: Request, res: Response) =>
         = await CaseElement
             .findAndCountAll(
                 utils.paginate(
-                    page,
-                    limit,
+                    Number(page),
+                    Number(limit),
                     {
                         include: [Publication],
                         order: [[sortBy, order]]
@@ -258,8 +276,8 @@ export const getCaseElementsByProfileId = catchAsync(async (req: Request, res: R
             = await CaseElement
                 .findAndCountAll(
                     utils.paginate(
-                        page,
-                        limit,
+                        Number(page),
+                        Number(limit),
                         {
                             include: [Publication],
                             order: [[sortBy, order]]

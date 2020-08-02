@@ -23,7 +23,10 @@ export const loginUser = catchAsync(async (req: Request, res: Response) => {
     if (!isValid) {
         utils.controllerResult(res, 400, schemaValidationResult.error, "유효성 검증 불통과");
     } else {
-        const user: AsyncReturnType<any> = await User.findOne({ where: { user_login_id } }).then(data => { return data });
+        const user: AsyncReturnType<any>
+            = await User.
+                findOne({ where: { user_login_id } })
+                .then(data => { return data });
 
         if (user === null) {
             utils.controllerResult(res, 400, null, user_login_id + " 사용자가 존재하지 않습니다.");

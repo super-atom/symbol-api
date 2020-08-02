@@ -1,10 +1,10 @@
 
 import { ErrorHandler } from '../middlewares/errorHandler';
 import * as utils from '../utils/utils.index';
-import { Response } from '../types/types.index';
+import { Response, LooseObject } from '../types/types.index';
 
 export function controllerResult(res: Response, statusCode?: number, data?: any, message?: string): object | void {
-    const result = {
+    const result: LooseObject = {
         status: ''
     }
 

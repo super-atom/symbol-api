@@ -24,7 +24,7 @@ Resource.init({
         field: 'resource_id'
     },
     resource_type: {
-        type: DataTypes.TINYINT(1),
+        type: DataTypes.TINYINT(),
         allowNull: false,
         validate: {
             min: 0,

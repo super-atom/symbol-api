@@ -28,7 +28,7 @@ Profile.init({
         field: 'profile_id'
     },
     profile_type: {
-        type: DataTypes.TINYINT(1),
+        type: DataTypes.TINYINT(),
         allowNull: false,
         validate: {
             min: 1,

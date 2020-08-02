@@ -1,11 +1,11 @@
 import * as jwt from 'jsonwebtoken';
-import { Response, Request, NextFunction } from '../types/types.index';
+import { Request, Response, NextFunction, AsyncReturnType } from '../types/types.index';
 import { catchAsync } from '../utils/catchAsync';
 import { ErrorHandler } from './errorHandler';
 import { User } from '../models/entities/User';
 import * as utils from '../utils/utils.index';
 
-export const authenticate = catchAsync(async (req: Response, res: Request, next: NextFunction) => {
+export const authenticate = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
     let token;
     const auth_data = req.headers.authorization;
 
@@ -18,7 +18,7 @@ export const authenticate = catchAsync(async (req: Response, res: Request, next:
     if (!token) return next(new ErrorHandler("Not authorize to access this route"));
     else {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const decoded: any = jwt.verify(token, process.env.JWT_SECRET);
             req.user = await User.findByPk(decoded.user_id);
             next();
         } catch (err) {
@@ -27,9 +27,9 @@ export const authenticate = catchAsync(async (req: Response, res: Request, next:
     }
 });
 
-export const authorize = (req: Response, res: Request, next: NextFunction, role: number) => {
+export const authorize = (req: Request, res: Response, next: NextFunction, role: number) => {
     // FIXME: 고쳐야됨
-    return (req: Response, res: Request, next: NextFunction): void => {
+    return (req: Request, res: Response, next: NextFunction): void => {
         let user_type;
         if (utils.isEmptyData(req.user.user_type)) {
             return next(new ErrorHandler("로그인이 필요합니다!"));

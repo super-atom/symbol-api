@@ -25,7 +25,7 @@ PostVideo.init({
         field: 'post_video_id'
     },
     post_video_type: {
-        type: DataTypes.TINYINT(1),
+        type: DataTypes.TINYINT(),
         allowNull: false,
         validate: {
             min: 0,
