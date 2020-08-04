@@ -1,5 +1,5 @@
 export enum NODE_ENV {
     LOCAL = "local",
-    DEV = "development",
-    LIVE = "production"
+    DEVELOPMENT = "development",
+    PRODUCTION = "production"
 }

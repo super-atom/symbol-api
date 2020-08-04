@@ -1,4 +1,4 @@
-import * as dotenv from 'dotenv';
+import './environment';
 import * as Sentry from '@sentry/node';
 import { RewriteFrames } from '@sentry/integrations';
 import { NODE_ENV } from './constants';
@@ -16,8 +16,6 @@ export const db: any = {
 };
 
 ((): any => {
-    dotenv.config();
-
     // Sentry.init({
     //     dsn: process.env.SENTRY_DNS,
     //     integrations: [new RewriteFrames({
@@ -26,7 +24,7 @@ export const db: any = {
     // });
     global.__rootdir__ = __dirname || process.cwd();
 
-    switch (process.env.NODE_ENV) {
+    switch (process.env.MODE) {
         case NODE_ENV.LOCAL:
             app.server_port = process.env.LOCAL_APP_SERVER_PORT;
             db.host = process.env.LOCAL_DB_HOST;
@@ -35,7 +33,7 @@ export const db: any = {
             db.password = process.env.LOCAL_DB_PASSWORD;
             db.schema = process.env.LOCAL_DB_SCHEMA;
             break;
-        case NODE_ENV.DEV:
+        case NODE_ENV.DEVELOPMENT:
             app.server_port = process.env.DEV_APP_SERVER_PORT;
             db.host = process.env.DEV_DB_HOST;
             db.user = process.env.DEV_DB_USER;
@@ -43,7 +41,7 @@ export const db: any = {
             db.password = process.env.DEV_DB_PASSWORD;
             db.schema = process.env.DEV_DB_SCHEMA;
             break;
-        case NODE_ENV.LIVE:
+        case NODE_ENV.PRODUCTION:
             app.server_port = process.env.LIVE_APP_SERVER_PORT;
             db.host = process.env.LIVE_DB_HOST;
             db.user = process.env.LIVE_DB_USER;

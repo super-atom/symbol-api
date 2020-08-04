@@ -6,7 +6,8 @@ import * as utils from './utils/utils.index';
 
 config;
 connection;
+logStorage;
 app.listen(config.app.server_port, () => {
     utils.myServerStateInfomation();
-    logStorage;
+    utils.myIpInformation();
 });
