@@ -4,7 +4,8 @@ import { RewriteFrames } from '@sentry/integrations';
 import { NODE_ENV } from './constants';
 
 export const app: any = {
-    server_port: null,
+    http_server_port: null,
+    https_server_port: null,
 };
 
 export const db: any = {
@@ -26,7 +27,8 @@ export const db: any = {
 
     switch (process.env.MODE) {
         case NODE_ENV.LOCAL:
-            app.server_port = process.env.LOCAL_APP_SERVER_PORT;
+            app.http_server_port = process.env.LOCAL_APP_HTTP_SERVER_PORT;
+            app.https_server_port = process.env.LOCAL_APP_HTTPS_SERVER_PORT;
             db.host = process.env.LOCAL_DB_HOST;
             db.user = process.env.LOCAL_DB_USER;
             db.port = process.env.LOCAL_DB_PORT;
@@ -34,7 +36,8 @@ export const db: any = {
             db.schema = process.env.LOCAL_DB_SCHEMA;
             break;
         case NODE_ENV.DEVELOPMENT:
-            app.server_port = process.env.DEV_APP_SERVER_PORT;
+            app.http_server_port = process.env.DEV_APP_HTTP_SERVER_PORT;
+            app.https_server_port = process.env.DEV_APP_HTTPS_SERVER_PORT;
             db.host = process.env.DEV_DB_HOST;
             db.user = process.env.DEV_DB_USER;
             db.port = process.env.DEV_DB_PORT;
@@ -42,12 +45,13 @@ export const db: any = {
             db.schema = process.env.DEV_DB_SCHEMA;
             break;
         case NODE_ENV.PRODUCTION:
-            app.server_port = process.env.LIVE_APP_SERVER_PORT;
-            db.host = process.env.LIVE_DB_HOST;
-            db.user = process.env.LIVE_DB_USER;
-            db.port = process.env.LIVE_DB_PORT;
-            db.password = process.env.LIVE_DB_PASSWORD;
-            db.schema = process.env.LIVE_DB_SCHEMA;
+            app.http_server_port = process.env.PRODUCTION_APP_HTTP_SERVER_PORT;
+            app.https_server_port = process.env.PRODUCTION_APP_HTTPS_SERVER_PORT;
+            db.host = process.env.PRODUCTION_DB_HOST;
+            db.user = process.env.PRODUCTION_DB_USER;
+            db.port = process.env.PRODUCTION_DB_PORT;
+            db.password = process.env.PRODUCTION_DB_PASSWORD;
+            db.schema = process.env.PRODUCTION_DB_SCHEMA;
             break;
         default:
             break;

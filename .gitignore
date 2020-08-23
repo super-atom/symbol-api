@@ -21,9 +21,10 @@ yarn-error.log
 
 # Directory
 /dist/
-/logs
+/logs/
 /auth/
 /externals/
 /docs/
 /settings/
 /src/static/
+/ssl/
