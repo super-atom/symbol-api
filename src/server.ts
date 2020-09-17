@@ -1,5 +1,4 @@
-import * as http from 'http';
-import * as https from 'https';
+import * as spdy from 'spdy';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -10,18 +9,21 @@ import { logStorage } from './database/logStorage';
 import app from './app';
 import * as utils from './utils/utils.index';
 
-const keyPath = path.resolve(path.join('ssl/private.pem'));
-const certPath = path.resolve(path.join('ssl/public.pem'));
+const certPath = path.resolve(path.join('/etc/ssl/certs/super-atom.com.pem'));
+const keyPath = path.resolve(path.join('/etc/ssl/private/super-atom.com.key'));
 
-const options = {
+const options: spdy.ServerOptions = {
+    cert: fs.readFileSync(certPath, 'utf8'),
     key: fs.readFileSync(keyPath, 'utf8'),
-    cert: fs.readFileSync(certPath, 'utf8')
+    spdy: {
+        protocols: ['h2', 'spdy/3.1', 'http/1.1'],
+        plain: false
+    }
 };
 
 config;
 connection;
 logStorage;
-// utils.myServerStateInfomation();
-// utils.myIpInformation();
-http.createServer(app).listen(config.app.http_server_port);
-https.createServer(options, app).listen(config.app.https_server_port);
+utils.myServerStateInfomation();
+utils.myIpInformation();
+spdy.createServer(options, app).listen(config.app.https_server_port);

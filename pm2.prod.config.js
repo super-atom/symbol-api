@@ -1,7 +1,7 @@
 module.exports = {
     apps: [
         {
-            name: 'api_prod',
+            name: 'symbol_api_prod',
             script: './dist/server.js',
             exec_mode: 'cluster',
             instances: 2,
